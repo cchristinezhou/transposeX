@@ -81,8 +81,8 @@ By leveraging **Optical Music Recognition (OMR)** and **music processing algorit
 - The app must be optimized for **mobile and tablet use**, ensuring that sheet music remains readable on smaller screens. *
 - The app must have **voiceover support** on all buttons and texts, ensuring usability for users with disabilities. *
 - The app should operate reliably **without frequent crashes or downtime**. *
-- The app must successfully open and function **98% of the time** without crashing.
-- Any **downtime or failures** must not exceed **2 minutes per day** on average.
+- The app must successfully open and function **98% of the time** without crashing. *
+- Any **downtime or failures** must not exceed **2 minutes per day** on average. *
 
 ---
 
