@@ -53,7 +53,7 @@ By leveraging **Optical Music Recognition (OMR)** and **music processing algorit
 <img width="851" alt="Screenshot 2025-02-18 at 1 12 59 PM" src="https://github.com/user-attachments/assets/a7ab5b47-19a7-4495-8443-7d2723b56236" />
 
 ### 2.4 Hi-Fi Wireframes
-You can access the Hi-Fi wireframes [here](https://cs5520-spring25-seattle.github.io/finalproject-transposex/TransposeX.pdf).
+- You can access the Hi-Fi wireframes [here](https://cs5520-spring25-seattle.github.io/finalproject-transposex/TransposeX.pdf).
 ---
 
 ## 3. Requirements
