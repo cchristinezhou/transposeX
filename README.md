@@ -51,6 +51,9 @@ By leveraging **Optical Music Recognition (OMR)** and **music processing algorit
 
 ### 2.3 App Workflow
 <img width="851" alt="Screenshot 2025-02-18 at 1 12 59 PM" src="https://github.com/user-attachments/assets/a7ab5b47-19a7-4495-8443-7d2723b56236" />
+
+### 2.4 Hi-Fi Wireframes
+You can access the Hi-Fi wireframes 
 ---
 
 ## 3. Requirements
