@@ -1,0 +1,337 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2821
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Menlo-Bold;\f1\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;\red130\green53\blue188;\red255\green255\blue254;\red0\green0\blue0;
+\red117\green121\blue118;\red143\green16\blue118;\red44\green218\blue151;\red153\green115\blue4;\red16\green121\blue2;
+}
+{\*\expandedcolortbl;;\cssrgb\c58824\c31373\c78431;\cssrgb\c100000\c100000\c99608;\cssrgb\c0\c0\c0;
+\cssrgb\c53333\c54902\c53725;\cssrgb\c63529\c15686\c53725;\cssrgb\c16863\c87059\c65882;\cssrgb\c66667\c52157\c0;\cssrgb\c0\c53333\c0;
+}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\b\fs24 \cf2 \cb3 \expnd0\expndtw0\kerning0
+classDiagram
+\f1\b0 \cf0 \cb1 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \cb3     \cf5 %% Singleton Pattern for Error Handling & File Storage\cf0 \cb1 \
+\cb3     
+\f0\b \cf2 class
+\f1\b0 \cf0  \cf6 ErrorHandler\cf0  
+\f0\b \{
+\f1\b0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf7 static\cf6  ErrorHandler\cf0  \cf6 instance\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf6 handleError
+\f0\b \cf0 (
+\f1\b0 \cf6 error
+\f0\b \cf0 :
+\f1\b0  \cf6 Exception
+\f0\b \cf0 )
+\f1\b0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf7 static\cf6  getInstance
+\f0\b \cf0 ():
+\f1\b0  \cf6 ErrorHandler\cf0 \cb1 \
+\cb3     
+\f0\b \}
+\f1\b0 \cb1 \
+\cb3     \cb1 \
+\cb3     
+\f0\b \cf2 class
+\f1\b0 \cf0  \cf6 FileStorage\cf0  
+\f0\b \{
+\f1\b0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf7 static\cf6  FileStorage\cf0  \cf6 instance\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf6 saveFile
+\f0\b \cf0 (
+\f1\b0 \cf6 file
+\f0\b \cf0 :
+\f1\b0  \cf6 MusicSheet
+\f0\b \cf0 ):
+\f1\b0  \cf6 String\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf6 getFile
+\f0\b \cf0 (
+\f1\b0 \cf6 path
+\f0\b \cf0 :
+\f1\b0  \cf6 String
+\f0\b \cf0 ):
+\f1\b0  \cf6 MusicSheet\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf7 static\cf6  getInstance
+\f0\b \cf0 ():
+\f1\b0  \cf6 FileStorage\cf0 \cb1 \
+\cb3     
+\f0\b \}
+\f1\b0 \cb1 \
+\
+\cb3     \cf5 %% User Class (Updated as Requested)\cf0 \cb1 \
+\cb3     
+\f0\b \cf2 class
+\f1\b0 \cf0  \cf6 User\cf0  
+\f0\b \{
+\f1\b0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf7 String\cf6  id\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf7 String\cf6  firstName\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf7 String\cf6  middleName\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf7 String\cf6  lastName\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf7 String\cf6  email\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf7 String\cf6  password\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf7 int\cf6  age\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf6 List\cf0 <\cf6 String\cf0 > \cf6 instruments\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf6 List\cf0 <\cf6 MusicSheet\cf0 > \cf6 savedSheets\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf6 register
+\f0\b \cf0 ()
+\f1\b0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf6 login
+\f0\b \cf0 ()
+\f1\b0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf6 saveSheet
+\f0\b \cf0 (
+\f1\b0 \cf6 sheet
+\f0\b \cf0 :
+\f1\b0  \cf6 MusicSheet
+\f0\b \cf0 )
+\f1\b0 \cb1 \
+\cb3     
+\f0\b \}
+\f1\b0 \cb1 \
+\
+\cb3     \cf5 %% MusicSheet Class (Updated)\cf0 \cb1 \
+\cb3     
+\f0\b \cf2 class
+\f1\b0 \cf0  \cf6 MusicSheet\cf0  
+\f0\b \{
+\f1\b0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf7 String\cf6  id\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf7 String\cf6  title\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf7 String\cf6  originalKey\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf7 String\cf6  transposedKey\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf7 String\cf6  filePath\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf7 String\cf6  xmlData\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf7 Boolean\cf6  hasMultipleKeys\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf6 rename
+\f0\b \cf0 (
+\f1\b0 \cf6 newTitle
+\f0\b \cf0 :
+\f1\b0  \cf6 String
+\f0\b \cf0 )
+\f1\b0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf6 download
+\f0\b \cf0 (
+\f1\b0 \cf6 format
+\f0\b \cf0 :
+\f1\b0  \cf6 String
+\f0\b \cf0 )
+\f1\b0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf6 detectKey
+\f0\b \cf0 ()
+\f1\b0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf6 transpose
+\f0\b \cf0 (
+\f1\b0 \cf6 targetKey
+\f0\b \cf0 :
+\f1\b0  \cf6 String
+\f0\b \cf0 )
+\f1\b0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf6 export
+\f0\b \cf0 (
+\f1\b0 \cf6 format
+\f0\b \cf0 :
+\f1\b0  \cf6 String
+\f0\b \cf0 )
+\f1\b0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf6 generatePreview
+\f0\b \cf0 ()
+\f1\b0 \cb1 \
+\cb3     
+\f0\b \}
+\f1\b0 \cb1 \
+\
+\cb3     \cf5 %% API Services\cf0 \cb1 \
+\cb3     
+\f0\b \cf2 class
+\f1\b0 \cf0  \cf6 AudiverisAPI\cf0  
+\f0\b \{
+\f1\b0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf6 convertImageToXML
+\f0\b \cf0 (
+\f1\b0 \cf6 sheet
+\f0\b \cf0 :
+\f1\b0  \cf6 MusicSheet
+\f0\b \cf0 ):
+\f1\b0  \cf6 String\cf0 \cb1 \
+\cb3     
+\f0\b \}
+\f1\b0 \cb1 \
+\
+\cb3     
+\f0\b \cf2 class
+\f1\b0 \cf0  \cf6 TransposeLibraryAPI\cf0  
+\f0\b \{
+\f1\b0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf6 transposeMusicXML
+\f0\b \cf0 (
+\f1\b0 \cf6 xmlData
+\f0\b \cf0 :
+\f1\b0  \cf6 String\cf0 , \cf6 targetKey
+\f0\b \cf0 :
+\f1\b0  \cf6 String
+\f0\b \cf0 ):
+\f1\b0  \cf6 String\cf0 \cb1 \
+\cb3     
+\f0\b \}
+\f1\b0 \cb1 \
+\
+\cb3     
+\f0\b \cf2 class
+\f1\b0 \cf0  \cf6 VerovioAPI\cf0  
+\f0\b \{
+\f1\b0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf6 renderMusicSheet
+\f0\b \cf0 (
+\f1\b0 \cf6 xmlData
+\f0\b \cf0 :
+\f1\b0  \cf6 String
+\f0\b \cf0 ):
+\f1\b0  \cf6 String\cf0 \cb1 \
+\cb3     
+\f0\b \}
+\f1\b0 \cb1 \
+\
+\cb3     \cf5 %% InfoPage Class for Static Content\cf0 \cb1 \
+\cb3     
+\f0\b \cf2 class
+\f1\b0 \cf0  \cf6 InfoPage\cf0  
+\f0\b \{
+\f1\b0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf7 String\cf6  aboutUs\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf7 String\cf6  helpSection\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf7 String\cf6  termsAndConditions\cf0 \cb1 \
+\cb3         
+\f0\b +
+\f1\b0 \cf7 String\cf6  privacyPolicy\cf0 \cb1 \
+\cb3     
+\f0\b \}
+\f1\b0 \cb1 \
+\
+\cb3     \cf5 %% Relationships and Data Flow\cf0 \cb1 \
+\cb3     \cf6 User\cf0  \cf8 "1"\cf0  
+\f0\b \cf9 -->
+\f1\b0 \cf0  \cf8 "*"\cf0  \cf6 MusicSheet\cf0  
+\f0\b :
+\f1\b0  \cf6 uploads\cf0 \cb1 \
+\cb3     \cf6 MusicSheet\cf0  \cf8 "1"\cf0  
+\f0\b \cf9 -->
+\f1\b0 \cf0  \cf8 "1"\cf0  \cf6 AudiverisAPI\cf0  
+\f0\b :
+\f1\b0  \cf6 convertsToXML\cf0 \cb1 \
+\cb3     \cf6 MusicSheet\cf0  \cf8 "1"\cf0  
+\f0\b \cf9 -->
+\f1\b0 \cf0  \cf8 "1"\cf0  \cf6 TransposeLibraryAPI\cf0  
+\f0\b :
+\f1\b0  \cf6 transposedBy\cf0 \cb1 \
+\cb3     \cf6 MusicSheet\cf0  \cf8 "1"\cf0  
+\f0\b \cf9 -->
+\f1\b0 \cf0  \cf8 "1"\cf0  \cf6 VerovioAPI\cf0  
+\f0\b :
+\f1\b0  \cf6 generatesPreview\cf0 \cb1 \
+\cb3     \cf6 MusicSheet\cf0  \cf8 "1"\cf0  
+\f0\b \cf9 -->
+\f1\b0 \cf0  \cf8 "1"\cf0  \cf6 FileStorage\cf0  
+\f0\b :
+\f1\b0  \cf6 storedIn\cf0 \cb1 \
+\cb3     \cf6 ErrorHandler\cf0  \cf8 "1"\cf0  
+\f0\b \cf9 -->
+\f1\b0 \cf0  \cf8 "*"\cf0  \cf6 TransposeLibraryAPI\cf0  
+\f0\b :
+\f1\b0  \cf6 handles\cf0 \cb1 \
+\cb3     \cf6 ErrorHandler\cf0  \cf8 "1"\cf0  
+\f0\b \cf9 -->
+\f1\b0 \cf0  \cf8 "*"\cf0  \cf6 AudiverisAPI\cf0  
+\f0\b :
+\f1\b0  \cf6 handles\cf0 \cb1 \
+\cb3     \cf6 ErrorHandler\cf0  \cf8 "1"\cf0  
+\f0\b \cf9 -->
+\f1\b0 \cf0  \cf8 "*"\cf0  \cf6 VerovioAPI\cf0  
+\f0\b :
+\f1\b0  \cf6 handles\cf0 \cb1 \
+\cb3     \cf6 InfoPage\cf0  \cf8 "1"\cf0  
+\f0\b \cf9 -->
+\f1\b0 \cf0  \cf8 "*"\cf0  \cf6 User\cf0  
+\f0\b :
+\f1\b0  \cf6 accessedBy\cf0 \cb1 \
+}
