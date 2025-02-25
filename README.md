@@ -52,6 +52,88 @@ By leveraging **Optical Music Recognition (OMR)** and **music processing algorit
 ### 2.3 App Workflow
 <img width="851" alt="Screenshot 2025-02-18 at 1 12 59 PM" src="https://github.com/user-attachments/assets/a7ab5b47-19a7-4495-8443-7d2723b56236" />
 
+```mermaid
+classDiagram
+    %% Singleton Pattern for Error Handling & File Storage
+    class ErrorHandler {
+        +static ErrorHandler instance
+        +handleError(error: Exception)
+        +static getInstance(): ErrorHandler
+    }
+    
+    class FileStorage {
+        +static FileStorage instance
+        +saveFile(file: MusicSheet): String
+        +getFile(path: String): MusicSheet
+        +static getInstance(): FileStorage
+    }
+
+    %% User Class (Updated as Requested)
+    class User {
+        +String id
+        +String firstName
+        +String middleName
+        +String lastName
+        +String email
+        +String password
+        +int age
+        +List<String> instruments
+        +List<MusicSheet> savedSheets
+        +register()
+        +login()
+        +saveSheet(sheet: MusicSheet)
+    }
+
+    %% MusicSheet Class (Updated)
+    class MusicSheet {
+        +String id
+        +String title
+        +String originalKey
+        +String transposedKey
+        +String filePath
+        +String xmlData
+        +Boolean hasMultipleKeys
+        +rename(newTitle: String)
+        +download(format: String)
+        +detectKey()
+        +transpose(targetKey: String)
+        +export(format: String)
+        +generatePreview()
+    }
+
+    %% API Services
+    class AudiverisAPI {
+        +convertImageToXML(sheet: MusicSheet): String
+    }
+
+    class TransposeLibraryAPI {
+        +transposeMusicXML(xmlData: String, targetKey: String): String
+    }
+
+    class VerovioAPI {
+        +renderMusicSheet(xmlData: String): String
+    }
+
+    %% InfoPage Class for Static Content
+    class InfoPage {
+        +String aboutUs
+        +String helpSection
+        +String termsAndConditions
+        +String privacyPolicy
+    }
+
+    %% Relationships and Data Flow
+    User "1" --> "*" MusicSheet : uploads
+    MusicSheet "1" --> "1" AudiverisAPI : convertsToXML
+    MusicSheet "1" --> "1" TransposeLibraryAPI : transposedBy
+    MusicSheet "1" --> "1" VerovioAPI : generatesPreview
+    MusicSheet "1" --> "1" FileStorage : storedIn
+    ErrorHandler "1" --> "*" TransposeLibraryAPI : handles
+    ErrorHandler "1" --> "*" AudiverisAPI : handles
+    ErrorHandler "1" --> "*" VerovioAPI : handles
+    InfoPage "1" --> "*" User : accessedBy
+```
+
 ### 2.4 Hi-Fi Wireframes
 - You can access the Hi-Fi wireframes [here](https://cs5520-spring25-seattle.github.io/finalproject-transposex/TransposeX.pdf).
 ---
