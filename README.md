@@ -123,15 +123,15 @@ classDiagram
     }
 
     %% Relationships and Data Flow
-    User "1" --> "*" MusicSheet : uploads
-    MusicSheet "1" --> "1" AudiverisAPI : convertsToXML
-    MusicSheet "1" --> "1" TransposeLibraryAPI : transposedBy
-    MusicSheet "1" --> "1" VerovioAPI : generatesPreview
-    MusicSheet "1" --> "1" FileStorage : storedIn
-    ErrorHandler "1" --> "*" TransposeLibraryAPI : handles
-    ErrorHandler "1" --> "*" AudiverisAPI : handles
-    ErrorHandler "1" --> "*" VerovioAPI : handles
-    InfoPage "1" --> "*" User : accessedBy
+    User "1" -- "*" MusicSheet : uploads
+    MusicSheet "1" -- "1" AudiverisAPI : convertsToXML
+    MusicSheet "1" -- "1" TransposeLibraryAPI : transposedBy
+    MusicSheet "1" -- "1" VerovioAPI : generatesPreview
+    MusicSheet "1" -- "1" FileStorage : storedIn
+    ErrorHandler "1" -- "*" TransposeLibraryAPI : handles
+    ErrorHandler "1" -- "*" AudiverisAPI : handles
+    ErrorHandler "1" -- "*" VerovioAPI : handles
+    InfoPage "1" -- "*" User : accessedBy
 ```
 
 ### 2.4 Hi-Fi Wireframes
