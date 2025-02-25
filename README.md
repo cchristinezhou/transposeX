@@ -56,28 +56,28 @@ By leveraging **Optical Music Recognition (OMR)** and **music processing algorit
 classDiagram
     %% Singleton Pattern for Error Handling & File Storage
     class ErrorHandler {
-        +static ErrorHandler instance
+        +ErrorHandler instance$
         +handleError(error: Exception)
-        +static getInstance(): ErrorHandler
+        +getInstance() ErrorHandler$
     }
     
     class FileStorage {
-        +static FileStorage instance
-        +saveFile(file: MusicSheet): String
-        +getFile(path: String): MusicSheet
-        +static getInstance(): FileStorage
+        +FileStorage instance$
+        +saveFile(file: MusicSheet) String
+        +getFile(path: String) MusicSheet
+        +getInstance() FileStorage$
     }
 
     %% User Class (Updated as Requested)
     class User {
         +String id
         +String firstName
-        +String middleName
+        +String? middleName
         +String lastName
         +String email
         +String password
-        +int age
-        +List<String> instruments
+        +int? age
+        +List<String>? instruments
         +List<MusicSheet> savedSheets
         +register()
         +login()
@@ -89,13 +89,12 @@ classDiagram
         +String id
         +String title
         +String originalKey
-        +String transposedKey
+        +String? transposedKey
         +String filePath
         +String xmlData
         +Boolean hasMultipleKeys
         +rename(newTitle: String)
         +download(format: String)
-        +detectKey()
         +transpose(targetKey: String)
         +export(format: String)
         +generatePreview()
@@ -103,15 +102,15 @@ classDiagram
 
     %% API Services
     class AudiverisAPI {
-        +convertImageToXML(sheet: MusicSheet): String
+        +convertImageToXML(sheet: MusicSheet) String
     }
 
     class TransposeLibraryAPI {
-        +transposeMusicXML(xmlData: String, targetKey: String): String
+        +transposeMusicXML(xmlData: String, targetKey: String) String
     }
 
     class VerovioAPI {
-        +renderMusicSheet(xmlData: String): String
+        +renderMusicSheet(xmlData: String) String
     }
 
     %% InfoPage Class for Static Content
