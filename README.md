@@ -132,6 +132,31 @@ classDiagram
     ErrorHandler "1" -- "*" VerovioAPI : handles
     InfoPage "1" -- "*" User : accessedBy
 ```
+## A-Force Team Plan
+
+### Gantt Chart Overview
+```mermaid
+gantt
+    title A-Force Team Plan
+    dateFormat  YYYY-MM-DD
+
+    section API & Preparation
+    Figure out the API we are using to scan the music sheet :scan_api, 2025-03-12, 7d
+
+    section Coding
+    Figure out how to transpose programmatically :transpose, 2025-03-19, 10d
+    Integrate OMR APIs :omr_api, 2025-03-27, 7d
+    Export transposed music to different formats :export_music, 2025-03-30, 8d
+    Test for a11y :a11y_test, 2025-04-05, 5d
+
+    section Testing & Freezes
+    Feature Freeze :feature_freeze, 2025-04-12, 1d
+    Code Freeze :code_freeze, 2025-04-19, 1d
+
+    section Presentation
+    Film the advertising video :film_ad, 2025-04-12, 11d
+    Prepare for the final presentation :prep_presentation, 2025-04-15, 5d
+    Final Presentation :presentation, 2025-04-22, 1d
 
 ### 2.4 Hi-Fi Wireframes
 - You can access the Hi-Fi wireframes [here](https://cs5520-spring25-seattle.github.io/finalproject-transposex/TransposeX.pdf).
