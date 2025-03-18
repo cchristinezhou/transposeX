@@ -56,28 +56,28 @@ By leveraging **Optical Music Recognition (OMR)** and **music processing algorit
 classDiagram
     %% Singleton Pattern for Error Handling & File Storage
     class ErrorHandler {
-        +static ErrorHandler instance
+        +ErrorHandler instance$
         +handleError(error: Exception)
-        +static getInstance(): ErrorHandler
+        +getInstance() ErrorHandler$
     }
     
     class FileStorage {
-        +static FileStorage instance
-        +saveFile(file: MusicSheet): String
-        +getFile(path: String): MusicSheet
-        +static getInstance(): FileStorage
+        +FileStorage instance$
+        +saveFile(file: MusicSheet) String
+        +getFile(path: String) MusicSheet
+        +getInstance() FileStorage$
     }
 
     %% User Class (Updated as Requested)
     class User {
         +String id
         +String firstName
-        +String middleName
+        +String? middleName
         +String lastName
         +String email
         +String password
-        +int age
-        +List<String> instruments
+        +int? age
+        +List<String>? instruments
         +List<MusicSheet> savedSheets
         +register()
         +login()
@@ -89,13 +89,12 @@ classDiagram
         +String id
         +String title
         +String originalKey
-        +String transposedKey
+        +String? transposedKey
         +String filePath
         +String xmlData
         +Boolean hasMultipleKeys
         +rename(newTitle: String)
         +download(format: String)
-        +detectKey()
         +transpose(targetKey: String)
         +export(format: String)
         +generatePreview()
@@ -103,15 +102,15 @@ classDiagram
 
     %% API Services
     class AudiverisAPI {
-        +convertImageToXML(sheet: MusicSheet): String
+        +convertImageToXML(sheet: MusicSheet) String
     }
 
     class TransposeLibraryAPI {
-        +transposeMusicXML(xmlData: String, targetKey: String): String
+        +transposeMusicXML(xmlData: String, targetKey: String) String
     }
 
     class VerovioAPI {
-        +renderMusicSheet(xmlData: String): String
+        +renderMusicSheet(xmlData: String) String
     }
 
     %% InfoPage Class for Static Content
@@ -123,15 +122,41 @@ classDiagram
     }
 
     %% Relationships and Data Flow
-    User "1" --> "*" MusicSheet : uploads
-    MusicSheet "1" --> "1" AudiverisAPI : convertsToXML
-    MusicSheet "1" --> "1" TransposeLibraryAPI : transposedBy
-    MusicSheet "1" --> "1" VerovioAPI : generatesPreview
-    MusicSheet "1" --> "1" FileStorage : storedIn
-    ErrorHandler "1" --> "*" TransposeLibraryAPI : handles
-    ErrorHandler "1" --> "*" AudiverisAPI : handles
-    ErrorHandler "1" --> "*" VerovioAPI : handles
-    InfoPage "1" --> "*" User : accessedBy
+    User "1" -- "*" MusicSheet : uploads
+    MusicSheet "1" -- "1" AudiverisAPI : convertsToXML
+    MusicSheet "1" -- "1" TransposeLibraryAPI : transposedBy
+    MusicSheet "1" -- "1" VerovioAPI : generatesPreview
+    MusicSheet "1" -- "1" FileStorage : storedIn
+    ErrorHandler "1" -- "*" TransposeLibraryAPI : handles
+    ErrorHandler "1" -- "*" AudiverisAPI : handles
+    ErrorHandler "1" -- "*" VerovioAPI : handles
+    InfoPage "1" -- "*" User : accessedBy
+```
+## A-Force Team Plan
+
+### Gantt Chart Overview
+```mermaid
+gantt
+    title A-Force Team Plan
+    dateFormat  YYYY-MM-DD
+
+    section API & Preparation
+    API Research (OMR) :scan_api, 2025-03-12, 7d
+
+    section Coding
+    Transpose Algorithm: transpose, 2025-03-19, 10d
+    Integrate OMR APIs: omr_api, 2025-03-27, 7d
+    Export Music Formats: export_music, 2025-03-30, 8d
+    Test for a11y: a11y_test, 2025-04-05, 5d
+
+    section Testing & Freezes
+    Feature Freeze :feature_freeze, 2025-04-12, 1d
+    Code Freeze :code_freeze, 2025-04-19, 1d
+
+    section Presentation
+    Film Ad Video: film_ad, 2025-04-12, 11d
+    Final Prep: prep_presentation, 2025-04-15, 5d
+    Presentation: presentation, 2025-04-22, 1d
 ```
 
 ### 2.4 Hi-Fi Wireframes
