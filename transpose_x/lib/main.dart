@@ -6,17 +6,15 @@ void main() {
   runApp(TransposeXApp());
 }
 
+
 class TransposeXApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Transpose X',
-      theme: ThemeData.dark(),
-      initialRoute: '/',
-      routes: {
-        '/': (context) => HomeScreen(),
-        '/viewSheet': (context) => ViewSheetScreen(xmlUrl: 'https://your-transposed-file.xml'),
-      },
+      theme: ThemeData.light(),
+      home: HomeScreen(),
     );
   }
 }
