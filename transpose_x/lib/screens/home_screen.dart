@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'saved_screen.dart';
 import 'profile_screen.dart';
+import 'camera_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -12,8 +13,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _screens = [
     HomeScreenContent(), // Actual home page content
-    SavedScreen(),       // Blank Saved screen
-    ProfileScreen(),     // Blank Profile screen
+    SavedScreen(), // Blank Saved screen
+    ProfileScreen(), // Blank Profile screen
   ];
 
   void _onItemTapped(int index) {
@@ -25,10 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        color: Colors.white,
-        child: _screens[_selectedIndex],
-      ),
+      body: Container(color: Colors.white, child: _screens[_selectedIndex]),
       bottomNavigationBar: Container(
         color: Color.fromARGB(255, 243, 237, 246),
         child: BottomNavigationBar(
@@ -54,7 +52,7 @@ class HomeScreenContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 30), 
+        padding: EdgeInsets.symmetric(horizontal: 30),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -89,21 +87,24 @@ class HomeScreenContent extends StatelessWidget {
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   TextSpan(
-                    text: "Snap a photo, upload a file, or import a PDF of your sheet music. We’ll analyze it instantly.\n\n",
+                    text:
+                        "Snap a photo, upload a file, or import a PDF of your sheet music. We’ll analyze it instantly.\n\n",
                   ),
                   TextSpan(
                     text: "2. Detect & Adjust\n",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   TextSpan(
-                    text: "We’ll identify the key signature automatically. Select your desired key and let the magic happen.\n\n",
+                    text:
+                        "We’ll identify the key signature automatically. Select your desired key and let the magic happen.\n\n",
                   ),
                   TextSpan(
                     text: "3. Download & Play\n",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   TextSpan(
-                    text: "Get your transposed sheet music in seconds. Save, print, or share it effortlessly.",
+                    text:
+                        "Get your transposed sheet music in seconds. Save, print, or share it effortlessly.",
                   ),
                 ],
               ),
@@ -121,10 +122,15 @@ class HomeScreenContent extends StatelessWidget {
             SizedBox(height: 30),
             ElevatedButton(
               onPressed: () {
-                // TODO: Implement Camera Function
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CameraScreen(),
+                  ), // 🚀 Navigates to Camera Screen
+                );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color.fromARGB(255, 98, 85, 139), 
+                backgroundColor: Color.fromARGB(255, 98, 85, 139),
                 padding: EdgeInsets.symmetric(horizontal: 50, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
@@ -141,7 +147,7 @@ class HomeScreenContent extends StatelessWidget {
                 // TODO: Implement File Upload
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color.fromARGB(255, 98, 85, 139), 
+                backgroundColor: Color.fromARGB(255, 98, 85, 139),
                 padding: EdgeInsets.symmetric(horizontal: 60, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
