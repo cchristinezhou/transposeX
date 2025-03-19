@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
 class CameraScreen extends StatefulWidget {
@@ -51,6 +52,17 @@ class _CameraScreenState extends State<CameraScreen> {
       print("Error capturing image: $e");
     }
   }
+
+  Future<void> _pickImagesFromGallery() async {
+  final ImagePicker picker = ImagePicker();
+  final List<XFile>? selectedImages = await picker.pickMultiImage();
+
+  if (selectedImages != null && selectedImages.isNotEmpty) {
+    setState(() {
+      _capturedImages.addAll(selectedImages); 
+    });
+  }
+}
 
   @override
   void dispose() {
@@ -139,7 +151,7 @@ class _CameraScreenState extends State<CameraScreen> {
         children: [
           // Capture & Checkmark buttons
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 30),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -150,9 +162,7 @@ class _CameraScreenState extends State<CameraScreen> {
                     size: 30,
                     color: Color.fromARGB(255, 98, 85, 139),
                   ),
-                  onPressed: () {
-                    // TODO: Open Gallery
-                  },
+                  onPressed: _pickImagesFromGallery, // Open the phone's album
                 ),
 
                 // Capture button (Takes picture)
@@ -185,7 +195,7 @@ class _CameraScreenState extends State<CameraScreen> {
                       color: Colors.transparent,
                     ),
                     child: Padding(
-                      padding: EdgeInsets.all(6), // Inset fix
+                      padding: EdgeInsets.all(6), 
                       child: Icon(
                         Icons.check_circle,
                         size: 40,
@@ -193,27 +203,6 @@ class _CameraScreenState extends State<CameraScreen> {
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-
-          Container(
-            color: Color.fromARGB(255, 243, 237, 246),
-            child: BottomNavigationBar(
-              currentIndex: 0,
-              selectedItemColor: Color.fromARGB(255, 98, 85, 139),
-              unselectedItemColor: Colors.black54,
-              backgroundColor: Color.fromARGB(255, 243, 237, 246),
-              items: const [
-                BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.bookmark),
-                  label: "Saved",
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person),
-                  label: "Profile",
                 ),
               ],
             ),
