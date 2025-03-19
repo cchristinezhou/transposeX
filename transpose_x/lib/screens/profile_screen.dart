@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import 'name_screen.dart';  // Import Name editing page
+import 'age_screen.dart';   // Import Age editing page
+import 'instrument_screen.dart';  // Import Instrument editing page
 
-// This screen displays the user's profile settings with options to edit Name, Age, and Instrument.
 class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text("My Profile"),
+        title: Text(
+          "My Profile",
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
@@ -16,14 +21,19 @@ class ProfileScreen extends StatelessWidget {
       body: Column(
         children: [
           _buildProfileOption(context, "Name", NameScreen()),
+          Divider(thickness: 1, color: Colors.grey[300]), 
           _buildProfileOption(context, "Age", AgeScreen()),
+          Divider(thickness: 1, color: Colors.grey[300]), 
           _buildProfileOption(context, "Instrument", InstrumentScreen()),
+          Divider(thickness: 1, color: Colors.grey[300]), 
+          SizedBox(height: 20), 
+          _buildPlaceholderLinks(context), 
         ],
       ),
     );
   }
 
-  // Helper function to create a profile option that navigates to the corresponding edit screen.
+  // Function to create a ListTile for profile options (Name, Age, Instrument)
   Widget _buildProfileOption(BuildContext context, String title, Widget screen) {
     return ListTile(
       title: Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
@@ -36,37 +46,29 @@ class ProfileScreen extends StatelessWidget {
       },
     );
   }
-}
 
-// Screen for editing the user's name.
-class NameScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Edit Name")),
-      body: Center(child: Text("Name Edit Page")),
-    );
-  }
-}
-
-// Screen for editing the user's age.
-class AgeScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Edit Age")),
-      body: Center(child: Text("Age Edit Page")),
-    );
-  }
-}
-
-// Screen for editing the user's instrument.
-class InstrumentScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Edit Instrument")),
-      body: Center(child: Text("Instrument Edit Page")),
+  // Function to create placeholder links for About Us and Privacy Policies
+  Widget _buildPlaceholderLinks(BuildContext context) {
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: () {
+          },
+          child: Text(
+            "About Us (placeholder)",
+            style: TextStyle(fontSize: 16, color: Colors.black, fontWeight: FontWeight.w500),
+          ),
+        ),
+        SizedBox(height: 10),
+        GestureDetector(
+          onTap: () {
+          },
+          child: Text(
+            "Privacy Policies (placeholder)",
+            style: TextStyle(fontSize: 16, color: Colors.black, fontWeight: FontWeight.w500),
+          ),
+        ),
+      ],
     );
   }
 }
