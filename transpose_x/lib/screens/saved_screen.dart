@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 
 class SavedScreen extends StatefulWidget {
   @override
@@ -18,13 +19,17 @@ class _SavedScreenState extends State<SavedScreen> {
 
   // Function to show rename dialog
   void _showRenameDialog(BuildContext context, int index) {
-    TextEditingController _controller = TextEditingController(text: savedSongs[index]["title"]);
+    TextEditingController _controller = TextEditingController(
+      text: savedSongs[index]["title"],
+    );
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), 
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: Text("Rename Your Music Sheet"),
           content: TextField(
             controller: _controller,
@@ -38,21 +43,33 @@ class _SavedScreenState extends State<SavedScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context), // Cancel button
-              child: Text("Cancel", style: TextStyle(color: Color.fromARGB(255, 98, 85, 139))),
+              child: Text(
+                "Cancel",
+                style: TextStyle(color: Color.fromARGB(255, 98, 85, 139)),
+              ),
             ),
             TextButton(
               onPressed: () {
                 setState(() {
-                  savedSongs[index]["title"] = _controller.text; // Update song name
+                  savedSongs[index]["title"] =
+                      _controller.text; // Update song name
                 });
                 Navigator.pop(context);
               },
-              child: Text("Save", style: TextStyle(color: Color.fromARGB(255, 98, 85, 139))),
+              child: Text(
+                "Save",
+                style: TextStyle(color: Color.fromARGB(255, 98, 85, 139)),
+              ),
             ),
           ],
         );
       },
     );
+  }
+
+  // Function to share sheet music
+  void _shareSheetMusic(String songTitle, String key) {
+    Share.share("Check out my sheet music: $songTitle 🎶 in $key.");
   }
 
   // Function to show the bottom sheet menu
@@ -75,7 +92,13 @@ class _SavedScreenState extends State<SavedScreen> {
               ListTile(
                 leading: Icon(Icons.share, color: Colors.black),
                 title: Text("Share"),
-                onTap: () => Navigator.pop(context),
+                onTap: () {
+                  Navigator.pop(context);
+                  _shareSheetMusic(
+                    savedSongs[index]["title"]!,
+                    savedSongs[index]["key"]!,
+                  ); // Trigger native share
+                },
               ),
               ListTile(
                 leading: Icon(Icons.download, color: Colors.black),
@@ -87,7 +110,7 @@ class _SavedScreenState extends State<SavedScreen> {
                 title: Text("Edit name"),
                 onTap: () {
                   Navigator.pop(context);
-                  _showRenameDialog(context, index); // Open rename dialog
+                  _showRenameDialog(context, index);
                 },
               ),
             ],
@@ -106,14 +129,20 @@ class _SavedScreenState extends State<SavedScreen> {
         elevation: 0,
         title: Text(
           "Saved",
-          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black),
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
         ),
         centerTitle: true,
       ),
       body: Theme(
         data: Theme.of(context).copyWith(
           scrollbarTheme: ScrollbarThemeData(
-            thumbColor: MaterialStateProperty.all(Color.fromARGB(255, 98, 85, 139)),
+            thumbColor: MaterialStateProperty.all(
+              Color.fromARGB(255, 98, 85, 139),
+            ),
             trackColor: MaterialStateProperty.all(Colors.transparent),
             trackVisibility: MaterialStateProperty.all(false),
           ),
@@ -126,21 +155,37 @@ class _SavedScreenState extends State<SavedScreen> {
           child: ListView.separated(
             padding: EdgeInsets.symmetric(horizontal: 20),
             itemCount: savedSongs.length,
-            separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey[300]),
+            separatorBuilder:
+                (context, index) => Divider(height: 1, color: Colors.grey[300]),
             itemBuilder: (context, index) {
               final song = savedSongs[index];
               return GestureDetector(
-                onTap: () => _showOptionsMenu(context, index), // Tap anywhere to open menu
+                onTap:
+                    () => _showOptionsMenu(
+                      context,
+                      index,
+                    ), // Tap anywhere to open menu
                 child: ListTile(
-                  leading: Icon(Icons.description, size: 28, color: Colors.black),
+                  leading: Icon(
+                    Icons.description,
+                    size: 28,
+                    color: Colors.black,
+                  ),
                   title: Text(
                     song["title"]!,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                   ),
-                  subtitle: Text(song["key"]!, style: TextStyle(color: Colors.grey[700])),
+                  subtitle: Text(
+                    song["key"]!,
+                    style: TextStyle(color: Colors.grey[700]),
+                  ),
                   trailing: IconButton(
                     icon: Icon(Icons.more_vert, color: Colors.grey[600]),
-                    onPressed: () => _showOptionsMenu(context, index), // Three-dot menu opens pop-up
+                    onPressed:
+                        () => _showOptionsMenu(
+                          context,
+                          index,
+                        ), // Three-dot menu opens pop-up
                   ),
                 ),
               );
