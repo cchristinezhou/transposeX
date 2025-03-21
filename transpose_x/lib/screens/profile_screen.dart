@@ -34,19 +34,29 @@ class ProfileScreen extends StatelessWidget {
   }
 
   // Function to create a ListTile for profile options (Name, Age, Instrument)
-  Widget _buildProfileOption(BuildContext context, String title, Widget screen) {
+    Widget _buildProfileOption(BuildContext context, String title, Widget screen) {
     return ListTile(
       title: Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
       trailing: Icon(Icons.arrow_forward_ios, size: 18),
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => screen),
+        Navigator.of(context).push(
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => screen,
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              const begin = Offset(1.0, 0.0); // Start from right
+              const end = Offset.zero; // End at center
+              const curve = Curves.easeInOut;
+
+              var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+              var offsetAnimation = animation.drive(tween);
+
+              return SlideTransition(position: offsetAnimation, child: child);
+            },
+          ),
         );
       },
     );
   }
-
   // Function to create placeholder links for About Us and Privacy Policies
   Widget _buildPlaceholderLinks(BuildContext context) {
     return Column(

@@ -69,8 +69,8 @@ class _InstrumentScreenState extends State<InstrumentScreen> {
                 onPressed: _addInstrument,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
-                  foregroundColor: Colors.purple,
-                  side: BorderSide(color: Colors.purple),
+                  foregroundColor: Color.fromARGB(255, 98, 85, 139),
+                  side: BorderSide(color: Color.fromARGB(255, 98, 85, 139)),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -115,7 +115,7 @@ class _InstrumentScreenState extends State<InstrumentScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: "Saved"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
-        selectedItemColor: Colors.purple,
+        selectedItemColor: Color.fromARGB(255, 98, 85, 139),
         unselectedItemColor: Colors.grey,
       ),
     );

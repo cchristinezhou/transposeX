@@ -47,7 +47,7 @@ class _NameScreenState extends State<NameScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: "Saved"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
-        selectedItemColor: Colors.purple,
+        selectedItemColor: Color.fromARGB(255, 98, 85, 139),
         unselectedItemColor: Colors.grey,
       ),
     );
