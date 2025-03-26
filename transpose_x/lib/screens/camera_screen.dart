@@ -1,3 +1,4 @@
+import '../services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
@@ -54,15 +55,15 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   Future<void> _pickImagesFromGallery() async {
-  final ImagePicker picker = ImagePicker();
-  final List<XFile>? selectedImages = await picker.pickMultiImage();
+    final ImagePicker picker = ImagePicker();
+    final List<XFile>? selectedImages = await picker.pickMultiImage();
 
-  if (selectedImages != null && selectedImages.isNotEmpty) {
-    setState(() {
-      _capturedImages.addAll(selectedImages); 
-    });
+    if (selectedImages != null && selectedImages.isNotEmpty) {
+      setState(() {
+        _capturedImages.addAll(selectedImages);
+      });
+    }
   }
-}
 
   @override
   void dispose() {
@@ -181,11 +182,42 @@ class _CameraScreenState extends State<CameraScreen> {
                   ),
                 ),
 
-                // Checkmark button (Confirm selection)
+                // Checkmark button (Uploads images)
                 GestureDetector(
-                  onTap: () {
-                    // TODO: Upload multiple captured images
-                    print("Images to upload: ${_capturedImages.length}");
+                  onTap: () async {
+                    if (_capturedImages.isEmpty) return;
+
+                    // Show loading indicator
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder:
+                          (context) =>
+                              Center(child: CircularProgressIndicator()),
+                    );
+
+                    // Convert images to file paths
+                    List<String> filePaths =
+                        _capturedImages.map((img) => img.path).toList();
+
+                    // Upload all images
+                    bool success = await ApiService.uploadFiles(filePaths);
+
+                    Navigator.pop(context); // Close loading indicator
+
+                    if (success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Upload successful!")),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            "Error uploading images. Please try again.",
+                          ),
+                        ),
+                      );
+                    }
                   },
                   child: Container(
                     width: 50,
@@ -195,7 +227,7 @@ class _CameraScreenState extends State<CameraScreen> {
                       color: Colors.transparent,
                     ),
                     child: Padding(
-                      padding: EdgeInsets.all(6), 
+                      padding: EdgeInsets.all(6),
                       child: Icon(
                         Icons.check_circle,
                         size: 40,

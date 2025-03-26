@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'saved_screen.dart';
 import 'profile_screen.dart';
 import 'camera_screen.dart';
+import '../services/api_service.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -144,7 +146,7 @@ class HomeScreenContent extends StatelessWidget {
             SizedBox(height: 15),
             ElevatedButton(
               onPressed: () {
-                // TODO: Implement File Upload
+                _pickFilesAndUpload(context);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color.fromARGB(255, 98, 85, 139),
@@ -162,5 +164,34 @@ class HomeScreenContent extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _pickFilesAndUpload(BuildContext context) async {
+    final ImagePicker picker = ImagePicker();
+    final List<XFile>? selectedFiles = await picker.pickMultiImage();
+
+    if (selectedFiles != null && selectedFiles.isNotEmpty) {
+      // Convert to file paths
+      List<String> filePaths = selectedFiles.map((file) => file.path).toList();
+
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(child: CircularProgressIndicator()),
+      );
+
+      bool success = await ApiService.uploadFiles(filePaths);
+
+      Navigator.pop(context); // Close loading indicator
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            success ? "Upload successful!" : "Error uploading files.",
+          ),
+        ),
+      );
+    }
   }
 }

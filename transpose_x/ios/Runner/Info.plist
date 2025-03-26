@@ -2,10 +2,16 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>We need access to your gallery to select a music sheet.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>We need access to your camera to take pictures of sheet music.</string>
+    <key>NSCameraUsageDescription</key>
+    <string>We need access to your camera to scan sheet music.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>We need access to your photo library to upload sheet music.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>We need access to the microphone for audio processing.</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>We need permission to save transposed sheet music.</string>
+    <key>NSDocumentsDirectoryUsageDescription</key>
+    <string>We need access to your documents for saving sheet music files.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
