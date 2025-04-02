@@ -8,7 +8,7 @@ const connection = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
-  database: process.env.DB_NAMßE
+  database: process.env.DB_NAME
 })
 
 connection.connect((err) => {
@@ -71,7 +71,7 @@ app.post('/upload', upload.single('musicImage'), (req, res) => {
   console.log(`📌 File received: ${inputPath}`);
 
   //const command = `/usr/libexec/java_home -v 23/bin/java -cp "${audiverisPath}/*" org.audiveris.omr.Main -batch "${inputPath}" -output "${outputDir}"`;
-  const command = `java -cp "${audiverisPath}/*" Audiveris -batch -transcribe -output "${outputDir}" -- "${inputPath}"`
+  const command = `java -cp "${audiverisPath}/*" Audiveris -batch -export -output "${outputDir}" -- "${inputPath}"`
   console.log("📌 Running Audiveris Command:", command);
 
   exec(command, (error, stdout, stderr) => {
@@ -84,7 +84,7 @@ app.post('/upload', upload.single('musicImage'), (req, res) => {
   const baseName = path.basename(inputPath, path.extname(inputPath)); 
   const dir = path.dirname(inputPath); 
   const musicxmlDir = path.join(dir, 'MusicXml');
-  const xmlFilePath = path.resolve(musicxmlDir, baseName + '.omr');
+  const xmlFilePath = path.resolve(musicxmlDir, baseName + '.mxl');
   console.log(`path is ${baseName,dir,xmlFilePath}`);
   const sql = 'INSERT INTO sheets (sheetName, imageUrl, musicXMLUrl) VALUES (?, ?, ?)';
   connection.query(sql, [sheetName, inputPath, xmlFilePath], (err, result) => {
