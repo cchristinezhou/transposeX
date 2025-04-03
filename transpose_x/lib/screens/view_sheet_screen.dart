@@ -78,7 +78,9 @@ Widget build(BuildContext context) {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => DetectKeyScreen()),
+                      MaterialPageRoute(builder: (context) => DetectKeyScreen(
+                        xmlContent: widget.xmlContent,
+                      )),
                     );
                   },
                   style: ElevatedButton.styleFrom(
