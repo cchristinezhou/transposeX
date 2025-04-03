@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>OSMD Viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/opensheetmusicdisplay@1.7.6/build/opensheetmusicdisplay.min.js"></script>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        overflow: auto;
+        background-color: white;
+      }
+      #osmd-container {
+        width: 100%;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="osmd-container"></div>
+    <script>
+      const osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay("osmd-container", {
+        autoResize: true,
+      });
+
+      function loadXml(xml) {
+        osmd.load(xml).then(() => osmd.render());
+      }
+
+      // Listen to Flutter sending XML
+      window.addEventListener("message", (event) => {
+        if (event.data && event.data.type === "loadXml") {
+          loadXml(event.data.xml);
+        }
+      });
+    </script>
+  </body>
+</html>

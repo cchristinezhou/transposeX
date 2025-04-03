@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'saved_screen.dart';
 import 'profile_screen.dart';
 import 'camera_screen.dart';
+import 'view_sheet_screen.dart';
 import '../services/api_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -167,31 +168,33 @@ class HomeScreenContent extends StatelessWidget {
   }
 
   Future<void> _pickFilesAndUpload(BuildContext context) async {
-    final ImagePicker picker = ImagePicker();
-    final List<XFile>? selectedFiles = await picker.pickMultiImage();
+  final ImagePicker picker = ImagePicker();
+  final List<XFile>? selectedFiles = await picker.pickMultiImage();
 
-    if (selectedFiles != null && selectedFiles.isNotEmpty) {
-      // Convert to file paths
-      List<String> filePaths = selectedFiles.map((file) => file.path).toList();
+  if (selectedFiles != null && selectedFiles.isNotEmpty) {
+    // Show loading spinner
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(child: CircularProgressIndicator()),
+    );
 
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => Center(child: CircularProgressIndicator()),
-      );
+    // TODO: Replace with real upload later
+    // bool success = await ApiService.uploadFiles(filePaths);
+    // Navigator.pop(context); // Dismiss spinner
 
-      bool success = await ApiService.uploadFiles(filePaths);
+    // Load the Fur Elise XML FOR NOW
+    String xml = await ApiService.getMockXml();
 
-      Navigator.pop(context); // Close loading indicator
+    Navigator.pop(context); // Dismiss spinner
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            success ? "Upload successful!" : "Error uploading files.",
-          ),
-        ),
-      );
-    }
+    // Navigate to viewer screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ViewSheetScreen(xmlContent: xml),
+      ),
+    );
   }
+}
 }
