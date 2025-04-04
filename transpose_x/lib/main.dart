@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
-import 'screens/view_sheet_screen.dart';
+import 'screens/view_uploaded_sheet_screen.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(TransposeXApp());
 }
 
