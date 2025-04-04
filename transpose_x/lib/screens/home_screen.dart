@@ -3,7 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'saved_screen.dart';
 import 'profile_screen.dart';
 import 'camera_screen.dart';
-import 'view_sheet_screen.dart';
+import 'view_uploaded_sheet_screen.dart';
 import '../services/api_service.dart';
 
 class HomeScreen extends StatefulWidget {
