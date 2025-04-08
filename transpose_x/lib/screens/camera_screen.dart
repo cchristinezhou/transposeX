@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:xml/xml.dart';
+import 'view_uploaded_sheet_screen.dart';
 
 class CameraScreen extends StatefulWidget {
   @override
@@ -13,7 +15,7 @@ class _CameraScreenState extends State<CameraScreen> {
   CameraController? _cameraController;
   late List<CameraDescription> _cameras;
   bool _isCameraInitialized = false;
-  List<XFile> _capturedImages = []; // Store multiple images
+  List<XFile> _capturedImages = [];
 
   @override
   void initState() {
@@ -44,10 +46,9 @@ class _CameraScreenState extends State<CameraScreen> {
     if (!_isCameraInitialized || _cameraController == null) return;
 
     try {
-      final XFile image =
-          await _cameraController!.takePicture(); // Capture image
+      final XFile image = await _cameraController!.takePicture();
       setState(() {
-        _capturedImages.add(image); // Store image in the list
+        _capturedImages.add(image);
       });
     } catch (e) {
       print("Error capturing image: $e");
@@ -55,7 +56,7 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   Future<void> _pickImagesFromGallery() async {
-    final ImagePicker picker = ImagePicker();
+    final picker = ImagePicker();
     final List<XFile>? selectedImages = await picker.pickMultiImage();
 
     if (selectedImages != null && selectedImages.isNotEmpty) {
@@ -86,15 +87,11 @@ class _CameraScreenState extends State<CameraScreen> {
       ),
       body: Stack(
         children: [
-          // Camera preview remains running
           Positioned.fill(
-            child:
-                _isCameraInitialized
-                    ? CameraPreview(_cameraController!)
-                    : Center(child: CircularProgressIndicator()),
+            child: _isCameraInitialized
+                ? CameraPreview(_cameraController!)
+                : Center(child: CircularProgressIndicator()),
           ),
-
-          // Display mini preview in the bottom-right corner
           if (_capturedImages.isNotEmpty)
             Positioned(
               bottom: 20,
@@ -103,17 +100,12 @@ class _CameraScreenState extends State<CameraScreen> {
                 width: 70,
                 height: 70,
                 child: Stack(
-                  clipBehavior: Clip.none, // Allows stacking effect
+                  clipBehavior: Clip.none,
                   children: [
-                    // Limit the offset to a max of 5 images
                     for (int i = 0; i < _capturedImages.length; i++)
                       Positioned(
-                        top:
-                            (i < 5)
-                                ? i * 3.0
-                                : 15.0, // Stop shifting after 5 images
-                        right:
-                            (i < 5) ? i * 3.0 : 15.0, // Keep max offset at 25px
+                        top: (i < 5) ? i * 3.0 : 15.0,
+                        right: (i < 5) ? i * 3.0 : 15.0,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.file(
@@ -124,8 +116,6 @@ class _CameraScreenState extends State<CameraScreen> {
                           ),
                         ),
                       ),
-
-                    // Badge showing the number of captured images
                     Positioned(
                       top: 0,
                       right: 0,
@@ -150,25 +140,21 @@ class _CameraScreenState extends State<CameraScreen> {
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Capture & Checkmark buttons
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 30, vertical: 30),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Gallery button
                 IconButton(
                   icon: Icon(
                     Icons.photo,
                     size: 30,
                     color: Color.fromARGB(255, 98, 85, 139),
                   ),
-                  onPressed: _pickImagesFromGallery, // Open the phone's album
+                  onPressed: _pickImagesFromGallery,
                 ),
-
-                // Capture button (Takes picture)
                 GestureDetector(
-                  onTap: _captureImage, // Capture image
+                  onTap: _captureImage,
                   child: Container(
                     width: 70,
                     height: 70,
@@ -181,41 +167,67 @@ class _CameraScreenState extends State<CameraScreen> {
                     ),
                   ),
                 ),
-
-                // Checkmark button (Uploads images)
                 GestureDetector(
                   onTap: () async {
                     if (_capturedImages.isEmpty) return;
 
-                    // Show loading indicator
                     showDialog(
                       context: context,
                       barrierDismissible: false,
-                      builder:
-                          (context) =>
-                              Center(child: CircularProgressIndicator()),
+                      builder: (_) => Center(child: CircularProgressIndicator()),
                     );
 
-                    // Convert images to file paths
-                    List<String> filePaths =
-                        _capturedImages.map((img) => img.path).toList();
+                    try {
+                      List<String> xmls = [];
 
-                    // Upload all images
-                    bool success = await ApiService.uploadFiles(filePaths);
+                      for (XFile image in _capturedImages) {
+                        final xml = await ApiService.uploadFile(image.path, image.name);
+                        if (xml != null) xmls.add(xml);
+                      }
 
-                    Navigator.pop(context); // Close loading indicator
+                      Navigator.pop(context);
 
-                    if (success) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Upload successful!")),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            "Error uploading images. Please try again.",
-                          ),
+                      if (xmls.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("❌ Upload failed.")),
+                        );
+                        return;
+                      }
+
+                      // Merge XMLs
+                      final baseDoc = XmlDocument.parse(xmls.first);
+                      final basePart = baseDoc.findAllElements('part').first;
+                      int measureOffset = basePart.findElements('measure').length;
+
+                      for (int i = 1; i < xmls.length; i++) {
+                        final doc = XmlDocument.parse(xmls[i]);
+                        final part = doc.findAllElements('part').first;
+                        final measures = part.findElements('measure');
+
+                        for (final measure in measures) {
+                          final numberAttr = measure.getAttributeNode('number');
+                          if (numberAttr != null) {
+                            numberAttr.value =
+                                (int.parse(numberAttr.value) + measureOffset).toString();
+                          }
+                          basePart.children.add(measure.copy());
+                        }
+
+                        measureOffset += measures.length;
+                      }
+
+                      final mergedXml = baseDoc.toXmlString(pretty: true);
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ViewSheetScreen(xmlContent: mergedXml),
                         ),
+                      );
+                    } catch (e) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("❌ Error uploading images: $e")),
                       );
                     }
                   },

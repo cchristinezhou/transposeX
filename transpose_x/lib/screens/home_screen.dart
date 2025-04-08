@@ -5,6 +5,7 @@ import 'profile_screen.dart';
 import 'camera_screen.dart';
 import 'view_uploaded_sheet_screen.dart';
 import '../services/api_service.dart';
+import 'package:xml/xml.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -12,17 +13,17 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0; // Track selected tab index
+  int _selectedIndex = 0;
 
   final List<Widget> _screens = [
-    HomeScreenContent(), // Actual home page content
-    SavedScreen(), // Blank Saved screen
-    ProfileScreen(), // Blank Profile screen
+    HomeScreenContent(),
+    SavedScreen(),
+    ProfileScreen(),
   ];
 
   void _onItemTapped(int index) {
     setState(() {
-      _selectedIndex = index; // Switch between screens
+      _selectedIndex = index;
     });
   }
 
@@ -37,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
           selectedItemColor: Color.fromARGB(255, 98, 85, 139),
           unselectedItemColor: Colors.black54,
           backgroundColor: Color.fromARGB(255, 243, 237, 246),
-          onTap: _onItemTapped, // Handle taps
+          onTap: _onItemTapped,
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
             BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: "Saved"),
@@ -129,7 +130,7 @@ class HomeScreenContent extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) => CameraScreen(),
-                  ), // 🚀 Navigates to Camera Screen
+                  ),
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -146,9 +147,7 @@ class HomeScreenContent extends StatelessWidget {
             ),
             SizedBox(height: 15),
             ElevatedButton(
-              onPressed: () {
-                _pickFilesAndUpload(context);
-              },
+              onPressed: () => _pickFilesAndUpload(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color.fromARGB(255, 98, 85, 139),
                 padding: EdgeInsets.symmetric(horizontal: 60, vertical: 12),
@@ -168,33 +167,69 @@ class HomeScreenContent extends StatelessWidget {
   }
 
   Future<void> _pickFilesAndUpload(BuildContext context) async {
-  final ImagePicker picker = ImagePicker();
-  final List<XFile>? selectedFiles = await picker.pickMultiImage();
+    final picker = ImagePicker();
+    final List<XFile>? selectedFiles = await picker.pickMultiImage();
 
-  if (selectedFiles != null && selectedFiles.isNotEmpty) {
-    // Show loading spinner
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Center(child: CircularProgressIndicator()),
-    );
+    if (selectedFiles != null && selectedFiles.isNotEmpty) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => Center(child: CircularProgressIndicator()),
+      );
 
-    // TODO: Replace with real upload later
-    // bool success = await ApiService.uploadFiles(filePaths);
-    // Navigator.pop(context); // Dismiss spinner
+      try {
+        List<String> xmls = [];
 
-    // Load the Fur Elise XML FOR NOW
-    String xml = await ApiService.getMockXml();
+        for (XFile file in selectedFiles) {
+          final xml = await ApiService.uploadFile(file.path, file.name);
+          if (xml != null) xmls.add(xml);
+        }
 
-    Navigator.pop(context); // Dismiss spinner
+        Navigator.pop(context); // Dismiss spinner
 
-    // Navigate to viewer screen
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ViewSheetScreen(xmlContent: xml),
-      ),
-    );
+        if (xmls.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("❌ Upload failed for all files.")),
+          );
+          return;
+        }
+
+        // Merge logic
+        final baseDoc = XmlDocument.parse(xmls.first);
+        final basePart = baseDoc.findAllElements('part').first;
+        int measureOffset = basePart.findElements('measure').length;
+
+        for (int i = 1; i < xmls.length; i++) {
+          final doc = XmlDocument.parse(xmls[i]);
+          final part = doc.findAllElements('part').first;
+          final measures = part.findElements('measure');
+
+          for (final measure in measures) {
+            final numberAttr = measure.getAttributeNode('number');
+            if (numberAttr != null) {
+              numberAttr.value =
+                  (int.parse(numberAttr.value) + measureOffset).toString();
+            }
+            basePart.children.add(measure.copy());
+          }
+
+          measureOffset += measures.length;
+        }
+
+        final mergedXml = baseDoc.toXmlString(pretty: true);
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ViewSheetScreen(xmlContent: mergedXml),
+          ),
+        );
+      } catch (e) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("❌ Error during upload: $e")),
+        );
+      }
+    }
   }
-}
 }

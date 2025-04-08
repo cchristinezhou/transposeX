@@ -37,7 +37,7 @@ dependencies:
   webview_flutter_wkwebview: ^3.11.0
   http: ^1.3.0
   image_picker: ^1.0.7
-  xml: ^6.1.0
+  xml: ^6.3.0
   path_provider: ^2.0.11
   pdf: ^3.10.0
   printing: ^5.10.0

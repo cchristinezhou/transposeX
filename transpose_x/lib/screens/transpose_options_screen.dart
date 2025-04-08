@@ -97,11 +97,26 @@ class _TransposeOptionsScreenState extends State<TransposeOptionsScreen> {
   }
 
   void _onTransposePressed() {
+  final original = widget.originalKey.trim().toLowerCase();
+  final selected = currentKey.trim().toLowerCase();
+
+  if (original == selected) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Oops! That’s the same key. Try transposing to spice things up 🎶"),
+        backgroundColor: Color.fromARGB(255, 98, 85, 139),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  } else {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const TransposingScreen()),
     );
   }
+}
 
   @override
   Widget build(BuildContext context) {
