@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const { exec } = require('child_process');
+const transposeMXL = require('./transpose');
 require('dotenv').config(); // Load environment variables
 const mysql = require('mysql2')
 const connection = mysql.createConnection({
@@ -84,7 +85,7 @@ app.post('/upload', upload.single('musicImage'), (req, res) => {
   const baseName = path.basename(inputPath, path.extname(inputPath)); 
   const dir = path.dirname(inputPath); 
   const musicxmlDir = path.join(dir, 'MusicXml');
-  const xmlFilePath = path.resolve(musicxmlDir, baseName + '.mxl');
+  const xmlFilePath = path.resolve(musicxmlDir, baseName + '.zip');
   console.log(`path is ${baseName,dir,xmlFilePath}`);
   const sql = 'INSERT INTO sheets (sheetName, imageUrl, musicXMLUrl) VALUES (?, ?, ?)';
   connection.query(sql, [sheetName, inputPath, xmlFilePath], (err, result) => {
@@ -98,6 +99,39 @@ app.post('/upload', upload.single('musicImage'), (req, res) => {
       xmlPath: xmlFilePath
     });
   });
+});
+
+
+app.post('/api/transpose', async (req, res) => {
+  const { inputPath, interval, outputPath } = req.body;
+
+  if (!inputPath || !outputPath || isNaN(interval)) {
+    return res.status(400).json({
+      code: 'BAD_REQUEST',
+      message: 'Missing or invalid parameters.'
+    });
+  }
+
+  try {
+    await transposeMXL(inputPath, Number(interval), outputPath);
+    res.status(200).json({
+      message: 'Transposition completed successfully',
+      downloadPath: outputPath
+    });
+  } catch (err) {
+    if (err.message.includes('No .xml')) {
+      res.status(422).json({
+        code: 'TRANSPOSE_FAILED',
+        message: 'MusicXML file could not be processed.'
+      });
+    } else {
+      console.error('❌ Transposition error:', err.message);
+      res.status(500).json({
+        code: 'SYSTEM_ERROR',
+        message: 'Internal server error during transposition.'
+      });
+    }
+  }
 });
 
 app.listen(PORT, '0.0.0.0', () => {
