@@ -9,7 +9,7 @@ class ApiService {
   // Upload multiple files sequentially
   static Future<bool> uploadFiles(List<String> filePaths) async {
     for (String filePath in filePaths) {
-      String? result = await uploadFile(filePath, "DefaultSheetName"); // You can replace this with a real name
+      String? result = await uploadFile(filePath, "DefaultSheetName"); 
       if (result == null) return false;
     }
     return true;

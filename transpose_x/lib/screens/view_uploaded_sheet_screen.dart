@@ -25,17 +25,17 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
           ..setNavigationDelegate(
             NavigationDelegate(
               onPageFinished: (url) async {
-  print("✅ WebView finished loading: $url");
+                print("✅ WebView finished loading: $url");
 
-  final encoded = base64Encode(utf8.encode(widget.xmlContent));
-  final script = """
+                final encoded = base64Encode(utf8.encode(widget.xmlContent));
+                final script = """
     const xmlStr = atob('$encoded');
     window.postMessage({ type: 'loadXml', xml: xmlStr });
   """;
-  print("📦 Injecting script...");
-  await _controller.runJavaScript(script);
-  print("✅ Script injected");
-}
+                print("📦 Injecting script...");
+                await _controller.runJavaScript(script);
+                print("✅ Script injected");
+              },
             ),
           );
 

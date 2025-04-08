@@ -103,7 +103,7 @@ app.post('/upload', upload.single('musicImage'), (req, res) => {
           sheetId: result.insertId,
           sheetName: sheetName,
           filePath: inputPath,
-          xmlPath: publicXmlPath // this is used in Flutter client to fetch the XML
+          xmlPath: publicXmlPath // used in Flutter client to fetch the XML
         });
       });
     });
