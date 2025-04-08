@@ -5,6 +5,7 @@ import 'profile_screen.dart';
 import 'camera_screen.dart';
 import 'view_uploaded_sheet_screen.dart';
 import '../services/api_service.dart';
+import 'package:path/path.dart' as p;
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -168,33 +169,49 @@ class HomeScreenContent extends StatelessWidget {
   }
 
   Future<void> _pickFilesAndUpload(BuildContext context) async {
-  final ImagePicker picker = ImagePicker();
-  final List<XFile>? selectedFiles = await picker.pickMultiImage();
+    final ImagePicker picker = ImagePicker();
+    final List<XFile>? selectedFiles = await picker.pickMultiImage();
 
-  if (selectedFiles != null && selectedFiles.isNotEmpty) {
-    // Show loading spinner
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Center(child: CircularProgressIndicator()),
-    );
+    if (selectedFiles != null && selectedFiles.isNotEmpty) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(child: CircularProgressIndicator()),
+      );
 
-    // TODO: Replace with real upload later
-    // bool success = await ApiService.uploadFiles(filePaths);
-    // Navigator.pop(context); // Dismiss spinner
+      try {
+        for (XFile file in selectedFiles) {
+          final String filePath = file.path;
+          final String fileName = file.name;
 
-    // Load the Fur Elise XML FOR NOW
-    String xml = await ApiService.getMockXml();
+          // Upload each file individually and get XML response
+          final String? xml = await ApiService.uploadFile(filePath, fileName);
 
-    Navigator.pop(context); // Dismiss spinner
+          if (xml != null) {
+            Navigator.pop(context); // Dismiss spinner
 
-    // Navigate to viewer screen
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ViewSheetScreen(xmlContent: xml),
-      ),
-    );
+            // Navigate to viewer with real XML
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ViewSheetScreen(xmlContent: xml),
+              ),
+            );
+
+            return; // Only upload and view the first one for now
+          } else {
+            Navigator.pop(context); // Dismiss spinner
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Failed to upload $fileName.")),
+            );
+          }
+        }
+      } catch (e) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error uploading file: $e")));
+      }
+    }
   }
-}
 }

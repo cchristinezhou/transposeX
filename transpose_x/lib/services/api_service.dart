@@ -1,39 +1,49 @@
 import 'dart:io';
-import 'package:flutter/services.dart' show rootBundle;
-// import 'package:http/http.dart' as http; // TODO: Uncomment for real backend
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String _audiverisUrl = "http://10.0.0.246:3000/upload";
-  static const String _transposeUrl = "https://your-transpose-api.com/transpose";
+  static const String audiverisUrl = "http://10.0.0.246:3000/upload";
+  static const String transposeUrl = "https://your-transpose-api.com/transpose";
 
   // Upload multiple files sequentially
   static Future<bool> uploadFiles(List<String> filePaths) async {
-    // TODO: Restore real backend logic later
-    // for (String filePath in filePaths) {
-    //   if (!await uploadFile(filePath)) return false;
-    // }
-    // return true;
-
-    return true; // Mock: Always succeed
+    for (String filePath in filePaths) {
+      String? result = await uploadFile(filePath, "DefaultSheetName"); // You can replace this with a real name
+      if (result == null) return false;
+    }
+    return true;
   }
 
-  // Upload a single file
-  static Future<bool> uploadFile(String filePath) async {
-    // TODO: Restore real backend logic later
-    // try {
-    //   var request = http.MultipartRequest("POST", Uri.parse(_audiverisUrl));
-    //   request.files.add(await http.MultipartFile.fromPath('musicImage', filePath));
-    //   var response = await request.send();
-    //   return response.statusCode == 200;
-    // } catch (e) {
-    //   return false;
-    // }
+  // Upload a single file and return the XML content
+  static Future<String?> uploadFile(String filePath, String sheetName) async {
+    try {
+      var request = http.MultipartRequest("POST", Uri.parse(audiverisUrl));
+      request.files.add(await http.MultipartFile.fromPath('musicImage', filePath));
+      request.fields['sheetName'] = sheetName;
 
-    return true; // Mock: Always succeed
-  }
+      var response = await request.send();
 
-  // TODO (NEED TO REMOVE): Mock function to load Fur Elise from assets
-  static Future<String> getMockXml() async {
-    return await rootBundle.loadString('assets/3.1.a.Fur_Elise.xml');
+      if (response.statusCode == 200) {
+        final responseBody = await response.stream.bytesToString();
+        final json = jsonDecode(responseBody);
+        final xmlPath = json['xmlPath']; // Ex: /MusicXml/filename.mxl
+
+        // Fetch the actual XML content from the server
+        final xmlResponse = await http.get(Uri.parse("http://10.0.0.246:3000$xmlPath"));
+
+        if (xmlResponse.statusCode == 200) {
+          return xmlResponse.body;
+        } else {
+          print("❌ XML fetch failed with status: ${xmlResponse.statusCode}");
+        }
+      } else {
+        print("❌ Upload failed with status: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("❌ Upload or XML fetch failed: $e");
+    }
+
+    return null;
   }
 }

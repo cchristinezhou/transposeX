@@ -83,7 +83,7 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
 
     final jpegFile = await captureWebViewToImage(previewContainer, directory);
 
-    await Future.delayed(Duration(seconds: 2));
+    await Future.delayed(Duration(seconds: 3));
     setState(() => _showPreview = false);
 
     final pdfSize = await pdfFile.length();
@@ -189,14 +189,9 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
             size: 48,
             color: Color.fromARGB(255, 98, 85, 139),
           ),
-          SizedBox(height: 16),
+          SizedBox(height: 24),
           Text(
-            "Sheet Preview",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 8),
-          Text(
-            "Your transposed music will go here.\nThis preview is exported as JPEG.",
+            "Tranposition successful! You can now download or share your sheet.",
             style: TextStyle(fontSize: 14),
             textAlign: TextAlign.center,
           ),
