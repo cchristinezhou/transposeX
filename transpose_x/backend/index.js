@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { exec } = require('child_process');
 const glob = require('glob');
+const transposeMXL = require('./transpose');
 require('dotenv').config();
 const mysql = require('mysql2');
 
@@ -108,6 +109,38 @@ app.post('/upload', upload.single('musicImage'), (req, res) => {
       });
     });
   });
+});
+
+app.post('/api/transpose', async (req, res) => {
+  const { inputPath, interval, outputPath } = req.body;
+
+  if (!inputPath || !outputPath || isNaN(interval)) {
+    return res.status(400).json({
+      code: 'BAD_REQUEST',
+      message: 'Missing or invalid parameters.'
+    });
+  }
+
+  try {
+    await transposeMXL(inputPath, Number(interval), outputPath);
+    res.status(200).json({
+      message: 'Transposition completed successfully',
+      downloadPath: outputPath
+    });
+  } catch (err) {
+    if (err.message.includes('No .xml')) {
+      res.status(422).json({
+        code: 'TRANSPOSE_FAILED',
+        message: 'MusicXML file could not be processed.'
+      });
+    } else {
+      console.error('❌ Transposition error:', err.message);
+      res.status(500).json({
+        code: 'SYSTEM_ERROR',
+        message: 'Internal server error during transposition.'
+      });
+    }
+  }
 });
 
 app.listen(PORT, '0.0.0.0', () => {
