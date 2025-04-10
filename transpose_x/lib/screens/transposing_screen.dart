@@ -4,7 +4,18 @@ import 'package:flutter/services.dart';
 import 'transpose_result_screen.dart';
 
 class TransposingScreen extends StatefulWidget {
-  const TransposingScreen({Key? key}) : super(key: key);
+  final String xmlContent;
+  final String originalKey;
+  final String transposedKey;
+  final String songName;
+
+  const TransposingScreen({
+    Key? key,
+    required this.xmlContent,
+    required this.originalKey,
+    required this.transposedKey,
+    required this.songName,
+  }) : super(key: key);
 
   @override
   State<TransposingScreen> createState() => _TransposingScreenState();
@@ -18,22 +29,21 @@ class _TransposingScreenState extends State<TransposingScreen> {
   }
 
   Future<void> _startTransposition() async {
-    // Simulate a delay (pretend to call backend)
-    await Future.delayed(const Duration(seconds: 2));
+  await Future.delayed(const Duration(seconds: 2)); // Simulate processing
 
-    // Load mock transposed XML from assets
-    final String transposedXml =
-        await rootBundle.loadString('assets/3.1.a.Fur_Elise.xml');
-
-    // Navigate to result screen
-    if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => TransposeResultScreen(transposedXml: transposedXml),
+  if (!mounted) return;
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (_) => TransposeResultScreen(
+        transposedXml: widget.xmlContent,
+        originalKey: widget.originalKey,
+        transposedKey: widget.transposedKey,
+        songName: widget.songName,
       ),
-    );
-  }
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {

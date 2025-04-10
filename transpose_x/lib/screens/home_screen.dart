@@ -167,69 +167,72 @@ class HomeScreenContent extends StatelessWidget {
   }
 
   Future<void> _pickFilesAndUpload(BuildContext context) async {
-    final picker = ImagePicker();
-    final List<XFile>? selectedFiles = await picker.pickMultiImage();
+  final picker = ImagePicker();
+  final List<XFile>? selectedFiles = await picker.pickMultiImage();
 
-    if (selectedFiles != null && selectedFiles.isNotEmpty) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => Center(child: CircularProgressIndicator()),
-      );
+  if (selectedFiles != null && selectedFiles.isNotEmpty) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Center(child: CircularProgressIndicator()),
+    );
 
-      try {
-        List<String> xmls = [];
+    try {
+      List<String> xmls = [];
 
-        for (XFile file in selectedFiles) {
-          final xml = await ApiService.uploadFile(file.path, file.name);
-          if (xml != null) xmls.add(xml);
-        }
-
-        Navigator.pop(context); // Dismiss spinner
-
-        if (xmls.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("❌ Upload failed for all files.")),
-          );
-          return;
-        }
-
-        // Merge logic
-        final baseDoc = XmlDocument.parse(xmls.first);
-        final basePart = baseDoc.findAllElements('part').first;
-        int measureOffset = basePart.findElements('measure').length;
-
-        for (int i = 1; i < xmls.length; i++) {
-          final doc = XmlDocument.parse(xmls[i]);
-          final part = doc.findAllElements('part').first;
-          final measures = part.findElements('measure');
-
-          for (final measure in measures) {
-            final numberAttr = measure.getAttributeNode('number');
-            if (numberAttr != null) {
-              numberAttr.value =
-                  (int.parse(numberAttr.value) + measureOffset).toString();
-            }
-            basePart.children.add(measure.copy());
-          }
-
-          measureOffset += measures.length;
-        }
-
-        final mergedXml = baseDoc.toXmlString(pretty: true);
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ViewSheetScreen(xmlContent: mergedXml),
-          ),
-        );
-      } catch (e) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("❌ Error during upload: $e")),
-        );
+      for (XFile file in selectedFiles) {
+        final xml = await ApiService.uploadFile(file.path, file.name);
+        if (xml != null) xmls.add(xml);
       }
+
+      Navigator.pop(context); // Dismiss spinner
+
+      if (xmls.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("❌ Upload failed for all files.")),
+        );
+        return;
+      }
+
+      // Merge logic
+      final baseDoc = XmlDocument.parse(xmls.first);
+      final basePart = baseDoc.findAllElements('part').first;
+      int measureOffset = basePart.findElements('measure').length;
+
+      for (int i = 1; i < xmls.length; i++) {
+        final doc = XmlDocument.parse(xmls[i]);
+        final part = doc.findAllElements('part').first;
+        final measures = part.findElements('measure');
+
+        for (final measure in measures) {
+          final numberAttr = measure.getAttributeNode('number');
+          if (numberAttr != null) {
+            numberAttr.value =
+                (int.parse(numberAttr.value) + measureOffset).toString();
+          }
+          basePart.children.add(measure.copy());
+        }
+
+        measureOffset += measures.length;
+      }
+
+      final mergedXml = baseDoc.toXmlString(pretty: true);
+      final firstFileName = selectedFiles.first.name;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ViewSheetScreen(
+            xmlContent: mergedXml
+          ),
+        ),
+      );
+    } catch (e) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Error during upload: $e")),
+      );
     }
   }
+}
 }

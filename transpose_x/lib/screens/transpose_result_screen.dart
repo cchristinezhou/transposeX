@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -10,12 +9,21 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'home_screen.dart';
 import 'view_sheet_screen.dart';
 import '../utils/file_export.dart';
+import '../services/api_service.dart';
 
 class TransposeResultScreen extends StatefulWidget {
   final String transposedXml;
+  final String originalKey;
+  final String transposedKey;
+  final String? songName;
 
-  const TransposeResultScreen({Key? key, required this.transposedXml})
-    : super(key: key);
+  const TransposeResultScreen({
+    Key? key,
+    required this.transposedXml,
+    required this.originalKey,
+    required this.transposedKey,
+    required this.songName,
+  }) : super(key: key);
 
   @override
   State<TransposeResultScreen> createState() => _TransposeResultScreenState();
@@ -78,17 +86,22 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
 
     final pdfFile = await convertWebViewToPdf(_controller, directory);
 
+    if (!mounted) return;
     setState(() => _showPreview = true);
+
     await Future.delayed(Duration(milliseconds: 500));
 
     final jpegFile = await captureWebViewToImage(previewContainer, directory);
 
     await Future.delayed(Duration(seconds: 3));
+
+    if (!mounted) return;
     setState(() => _showPreview = false);
 
     final pdfSize = await pdfFile.length();
     final jpegSize = await jpegFile.length();
 
+    if (!mounted) return;
     setState(() {
       _xmlSize = xmlSize;
       _pdfSize = pdfSize;
@@ -141,12 +154,19 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
                     MaterialPageRoute(
                       builder:
                           (_) => ViewSheetScreen(
-                            keySignature: "Unknown Key", // TODO: ADD REAL KEY
+                            keySignature: widget.transposedKey,
                             xmlContent: widget.transposedXml,
+                            fileName: widget.songName ?? "Untitled Song",
                           ),
                     ),
                   );
                 }),
+                const SizedBox(height: 10),
+                _buildButton(
+                  Icons.save_alt,
+                  "Save to Library",
+                  _handleSaveToLibrary,
+                ),
                 const SizedBox(height: 10),
                 _buildButton(Icons.download, "Download", _showDownloadOptions),
                 const SizedBox(height: 10),
@@ -191,7 +211,7 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
           ),
           SizedBox(height: 24),
           Text(
-            "Tranposition successful! You can now download or share your sheet.",
+            "Transposition successful! You can now download or share your sheet.",
             style: TextStyle(fontSize: 14),
             textAlign: TextAlign.center,
           ),
@@ -231,6 +251,67 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  void _handleSaveToLibrary() {
+    final TextEditingController controller = TextEditingController();
+
+    // Capture the scaffold context *before* the dialog
+    final scaffoldContext = context;
+
+    showDialog(
+      context: scaffoldContext,
+      builder:
+          (dialogContext) => AlertDialog(
+            title: Text("Name your sheet"),
+            content: TextField(
+              controller: controller,
+              decoration: InputDecoration(hintText: "e.g. My Transposed Song"),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () async {
+                  final name = controller.text.trim();
+
+                  Navigator.pop(dialogContext); // Always dismiss dialog first
+
+                  if (name.isEmpty) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                        SnackBar(content: Text("❗ Please enter a name.")),
+                      );
+                    }
+                    return;
+                  }
+
+                  final success = await ApiService.saveSongToDatabase(
+                    name: name,
+                    xml: widget.transposedXml,
+                    originalKey: widget.originalKey,
+                    transposedKey: widget.transposedKey,
+                  );
+
+                  if (!mounted) return;
+
+                  ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        success
+                            ? "✅ Saved to library as \"$name\""
+                            : "❌ Failed to save. Try again.",
+                      ),
+                    ),
+                  );
+                },
+                child: Text("Save"),
+              ),
+            ],
+          ),
     );
   }
 

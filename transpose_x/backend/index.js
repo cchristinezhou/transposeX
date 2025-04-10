@@ -7,6 +7,7 @@ const glob = require('glob');
 require('dotenv').config();
 const mysql = require('mysql2');
 
+// MySQL connection setup
 const connection = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -18,7 +19,7 @@ connection.connect((err) => {
   if (err) throw err;
   console.log('✅ Connected to MySQL');
 
-  const createTableQuery = `
+  const createSheetsTable = `
     CREATE TABLE IF NOT EXISTS sheets (
       id INT AUTO_INCREMENT PRIMARY KEY,
       sheetName VARCHAR(255) NOT NULL,
@@ -28,38 +29,56 @@ connection.connect((err) => {
     );
   `;
 
-  connection.query(createTableQuery, (err) => {
+  const createSavedSongsTable = `
+    CREATE TABLE IF NOT EXISTS saved_songs (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      xml LONGTEXT NOT NULL,
+      originalKey VARCHAR(100),
+      transposedKey VARCHAR(100),
+      createdTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  connection.query(createSheetsTable, (err) => {
     if (err) throw err;
     console.log('📄 Table "sheets" is ready');
   });
+
+  connection.query(createSavedSongsTable, (err) => {
+    if (err) throw err;
+    console.log('📄 Table "saved_songs" is ready');
+  });
 });
 
-console.log("📌 Checking if .env is loaded:", process.env.AUDIVERIS_PATH);
-
-const audiverisPath = process.env.AUDIVERIS_PATH || "/Applications/Audiveris.app/Contents/app";
 const app = express();
 const PORT = 3000;
 
+const audiverisPath = process.env.AUDIVERIS_PATH || "/Applications/Audiveris.app/Contents/app";
 app.use('/MusicXml', express.static(path.join(__dirname, 'uploads/MusicXml')));
 
+// Middleware
+app.use(express.json());
+
+// Multer setup for file upload
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'uploads/');
   },
   filename: (req, file, cb) => {
-    const sanitizedOriginal = file.originalname.replace(/[^a-zA-Z0-9.]/g, '_');
-    const uniqueName = Date.now() + '-' + sanitizedOriginal;
-    cb(null, uniqueName);
+    const sanitized = file.originalname.replace(/[^a-zA-Z0-9.]/g, '_');
+    const unique = Date.now() + '-' + sanitized;
+    cb(null, unique);
   }
 });
 
 const upload = multer({ storage });
-app.use(express.json());
 
 app.get('/', (req, res) => {
   res.send('🎶 Welcome to TransposeX Backend!');
 });
 
+// Upload Endpoint
 app.post('/upload', upload.single('musicImage'), (req, res) => {
   const sheetName = req.body.sheetName;
   if (!req.file || !sheetName) {
@@ -80,7 +99,6 @@ app.post('/upload', upload.single('musicImage'), (req, res) => {
       return res.status(500).json({ error: 'Audiveris processing error' });
     }
 
-    // Search for any .xml file generated under MusicXml recursively
     glob(`${outputDir}/**/*.xml`, (err, files) => {
       if (err || files.length === 0) {
         console.error("❌ Raw XML file not found. Something went wrong.");
@@ -103,10 +121,68 @@ app.post('/upload', upload.single('musicImage'), (req, res) => {
           sheetId: result.insertId,
           sheetName: sheetName,
           filePath: inputPath,
-          xmlPath: publicXmlPath // used in Flutter client to fetch the XML
+          xmlPath: publicXmlPath
         });
       });
     });
+  });
+});
+
+// Save Transposed Song to Library
+app.post('/save-song', (req, res) => {
+  const { name, xml, originalKey, transposedKey } = req.body;
+
+  if (!name || !xml || !originalKey || !transposedKey) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  const sql = `
+    INSERT INTO saved_songs (name, xml, originalKey, transposedKey)
+    VALUES (?, ?, ?, ?)
+  `;
+
+  connection.query(sql, [name, xml, originalKey, transposedKey], (err, result) => {
+    if (err) {
+      console.error("❌ Failed to insert song:", err);
+      return res.status(500).json({ error: "Failed to save song" });
+    }
+
+    console.log(`✅ Saved transposed song: ${name} (ID: ${result.insertId})`);
+    res.json({ message: "✅ Song saved successfully", songId: result.insertId });
+  });
+});
+
+// GET all saved songs
+app.get('/saved-songs', (req, res) => {
+  const sql = `
+    SELECT id, name, xml, originalKey, transposedKey, createdTime
+    FROM saved_songs
+    ORDER BY createdTime DESC
+  `;
+
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error('❌ Failed to fetch saved songs:', err);
+      return res.status(500).json({ error: 'Failed to fetch saved songs' });
+    }
+
+    console.log(`✅ Fetched ${results.length} saved songs`);
+    res.json(results);
+  });
+});
+
+// delete a song from library
+app.delete('/songs/:id', (req, res) => {
+  const songId = req.params.id;
+
+  const query = 'DELETE FROM saved_songs WHERE id = ?';
+  connection.query(query, [songId], (err, results) => {
+    if (err) {
+      console.error("❌ Failed to delete song:", err);
+      return res.status(500).json({ error: 'Failed to delete song' });
+    }
+
+    res.json({ message: '✅ Song deleted successfully' });
   });
 });
 

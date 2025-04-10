@@ -29,13 +29,27 @@
     });
 
     function loadXml(xml) {
-      osmd.load(xml).then(() => osmd.render());
+      osmd.load(xml).then(() => {
+        osmd.render();
+
+        // After render, try to remove title text
+        const svg = document.querySelector("#osmd-container svg");
+        if (svg) {
+          const texts = svg.querySelectorAll("text");
+          texts.forEach((textNode) => {
+            const content = textNode.textContent?.trim().toLowerCase();
+            if (content === "untitled score" || content.includes("untitled")) {
+              textNode.remove();
+            }
+          });
+        }
+      });
     }
 
     window.addEventListener("message", (event) => {
       if (event.data && event.data.type === "loadXml") {
         console.log("🎼 Received XML from Flutter!");
-        console.log(event.data.xml?.slice(0, 100)); // Show first 100 chars
+        console.log(event.data.xml?.slice(0, 100));
         loadXml(event.data.xml);
       }
     });
