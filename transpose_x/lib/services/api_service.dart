@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 class ApiService {
   static const String baseUrl =
       "http://10.0.0.246:3000"; // ← machine's IP on the same network
-      // TODO: REPLACE THE IP ADDRESS BEFORE DEPLOYING
+  // TODO: REPLACE THE IP ADDRESS BEFORE DEPLOYING
   static const String audiverisUrl = "$baseUrl/upload";
   static const String transposeUrl = "https://your-transpose-api.com/transpose";
   static const String savedSongsUrl = "$baseUrl/saved-songs";
@@ -37,7 +37,8 @@ class ApiService {
         final xmlPath = json['xmlPath'];
 
         final xmlResponse = await http.get(Uri.parse("$baseUrl$xmlPath"));
-
+print("📥 Raw XML path: $xmlPath");
+print("📥 XML response body snippet: ${xmlResponse.body.substring(0, 200)}");
         if (xmlResponse.statusCode == 200) {
           return xmlResponse.body;
         } else {
@@ -85,6 +86,28 @@ class ApiService {
     }
   }
 
+  // Transpose a song using the backend
+  static Future<String> transposeSong({
+    required String xml,
+    required int interval,
+  }) async {
+    final url = Uri.parse('$baseUrl/api/transpose');
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'xml': xml, 'interval': interval}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['transposedXml']; // ← new backend field
+    } else {
+      throw Exception('Failed to transpose XML: ${response.body}');
+    }
+  }
+
+  // Fetch saved songs from the backend
   static Future<List<Map<String, dynamic>>> getSavedSongs() async {
     final response = await http.get(Uri.parse(savedSongsUrl));
     if (response.statusCode == 200) {
@@ -97,21 +120,19 @@ class ApiService {
 
   // Delete a song from the library
   static Future<bool> deleteSongFromDatabase(int id) async {
-  try {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/songs/$id'),
-    );
+    try {
+      final response = await http.delete(Uri.parse('$baseUrl/songs/$id'));
 
-    if (response.statusCode == 200) {
-      print("✅ Song deleted successfully");
-      return true;
-    } else {
-      print("❌ Failed to delete song: ${response.statusCode}");
+      if (response.statusCode == 200) {
+        print("✅ Song deleted successfully");
+        return true;
+      } else {
+        print("❌ Failed to delete song: ${response.statusCode}");
+        return false;
+      }
+    } catch (e) {
+      print("❌ Error deleting song: $e");
       return false;
     }
-  } catch (e) {
-    print("❌ Error deleting song: $e");
-    return false;
   }
-}
 }
