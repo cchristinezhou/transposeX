@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NameScreen extends StatefulWidget {
   @override
@@ -6,10 +7,39 @@ class NameScreen extends StatefulWidget {
 }
 
 class _NameScreenState extends State<NameScreen> {
-  // Controllers to manage text input fields for first, middle, and last names
   TextEditingController _firstNameController = TextEditingController();
   TextEditingController _middleNameController = TextEditingController();
   TextEditingController _lastNameController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCachedNames(); // Load saved values when screen starts
+  }
+
+  Future<void> _loadCachedNames() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _firstNameController.text = prefs.getString('firstName') ?? '';
+      _middleNameController.text = prefs.getString('middleName') ?? '';
+      _lastNameController.text = prefs.getString('lastName') ?? '';
+    });
+  }
+
+  Future<void> _saveNamesToCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('firstName', _firstNameController.text);
+    await prefs.setString('middleName', _middleNameController.text);
+    await prefs.setString('lastName', _lastNameController.text);
+  }
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _middleNameController.dispose();
+    _lastNameController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +51,10 @@ class _NameScreenState extends State<NameScreen> {
         foregroundColor: Colors.black,
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () async {
+            await _saveNamesToCache(); // Save when user taps back
+            Navigator.pop(context);
+          },
         ),
         title: Text(
           "Back",
@@ -53,7 +86,6 @@ class _NameScreenState extends State<NameScreen> {
     );
   }
 
-  // Function to build a styled text input field
   Widget _buildTextField(String label, TextEditingController controller) {
     return Padding(
       padding: EdgeInsets.only(bottom: 15),

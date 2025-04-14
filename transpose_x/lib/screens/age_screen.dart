@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AgeScreen extends StatefulWidget {
   @override
@@ -6,7 +7,27 @@ class AgeScreen extends StatefulWidget {
 }
 
 class _AgeScreenState extends State<AgeScreen> {
-  int? _selectedAge = 20;  // Default selected age is 20
+  int? _selectedAge = 20; // Default selected age is 20
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCachedAge();
+  }
+
+  Future<void> _loadCachedAge() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedAge = prefs.getInt('age') ?? 20;
+    });
+  }
+
+  Future<void> _saveAgeToCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (_selectedAge != null) {
+      await prefs.setInt('age', _selectedAge!);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +39,10 @@ class _AgeScreenState extends State<AgeScreen> {
         foregroundColor: Colors.black,
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () async {
+            await _saveAgeToCache(); // Save selected age
+            Navigator.pop(context);
+          },
         ),
         title: Text(
           "Back",
@@ -35,7 +59,7 @@ class _AgeScreenState extends State<AgeScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.edit, color: Colors.black54, size: 20),
-                SizedBox(width: 8), 
+                SizedBox(width: 8),
                 Text(
                   "Your Age",
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
@@ -57,18 +81,17 @@ class _AgeScreenState extends State<AgeScreen> {
                 icon: Icon(Icons.arrow_drop_down),
                 iconSize: 24,
                 dropdownColor: Color(0xFFEDE7F6),
-                underline: SizedBox(), 
+                underline: SizedBox(),
                 onChanged: (int? newValue) {
                   setState(() {
                     _selectedAge = newValue;
                   });
                 },
-                // Generate a list of ages from 0 to 100
-                items: List.generate(101, (index) => index) 
+                items: List.generate(101, (index) => index)
                     .map<DropdownMenuItem<int>>((int value) {
                   return DropdownMenuItem<int>(
                     value: value,
-                    child: Center( 
+                    child: Center(
                       child: Text(
                         value.toString(),
                         style: TextStyle(fontSize: 16),
@@ -82,7 +105,7 @@ class _AgeScreenState extends State<AgeScreen> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 2, 
+        currentIndex: 2,
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: "Saved"),
