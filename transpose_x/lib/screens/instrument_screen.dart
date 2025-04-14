@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class InstrumentScreen extends StatefulWidget {
   @override
@@ -6,18 +7,43 @@ class InstrumentScreen extends StatefulWidget {
 }
 
 class _InstrumentScreenState extends State<InstrumentScreen> {
-  // Controller to manage user input for instrument names
   TextEditingController _instrumentController = TextEditingController();
-  List<String> _instruments = [];  // List to store the added instruments
+  List<String> _instruments = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCachedInstruments();
+  }
+
+  Future<void> _loadCachedInstruments() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _instruments = prefs.getStringList('instruments') ?? [];
+    });
+  }
+
+  Future<void> _saveInstrumentsToCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('instruments', _instruments);
+  }
 
   void _addInstrument() {
     String instrument = _instrumentController.text.trim();
     if (instrument.isNotEmpty) {
       setState(() {
-        _instruments.add(instrument);  // Add the new instrument to the list
-        _instrumentController.clear();  // Clear the input field after adding
+        _instruments.add(instrument);
+        _instrumentController.clear();
       });
+      _saveInstrumentsToCache(); // Save after adding
     }
+  }
+
+  void _deleteInstrument(int index) {
+    setState(() {
+      _instruments.removeAt(index);
+    });
+    _saveInstrumentsToCache(); // Save after deleting
   }
 
   @override
@@ -30,7 +56,9 @@ class _InstrumentScreenState extends State<InstrumentScreen> {
         foregroundColor: Colors.black,
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            Navigator.pop(context); // No need to save here; already saved on add/delete
+          },
         ),
         title: Text(
           "Back",
@@ -62,8 +90,6 @@ class _InstrumentScreenState extends State<InstrumentScreen> {
               ),
             ),
             SizedBox(height: 10),
-
-            // "Add an Instrument" button
             Center(
               child: ElevatedButton(
                 onPressed: _addInstrument,
@@ -79,8 +105,6 @@ class _InstrumentScreenState extends State<InstrumentScreen> {
               ),
             ),
             SizedBox(height: 20),
-
-            // Expanded widget to make the list scrollable
             Expanded(
               child: ListView.builder(
                 itemCount: _instruments.length,
@@ -94,11 +118,7 @@ class _InstrumentScreenState extends State<InstrumentScreen> {
                       title: Text(_instruments[index]),
                       trailing: IconButton(
                         icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          setState(() {
-                            _instruments.removeAt(index);
-                          });
-                        },
+                        onPressed: () => _deleteInstrument(index),
                       ),
                     ),
                   );
