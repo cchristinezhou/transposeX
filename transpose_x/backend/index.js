@@ -8,6 +8,8 @@ require('dotenv').config();
 const mysql = require('mysql2');
 const xml2js = require('xml2js');
 
+process.env.TESSDATA_PREFIX = '/opt/homebrew/share'; // Set for Tesseract
+
 // MySQL connection setup
 const connection = mysql.createConnection({
   host: process.env.DB_HOST,
@@ -53,13 +55,16 @@ connection.connect((err) => {
 });
 
 const app = express();
-const PORT = 3000;
+app.use(express.json({ limit: '20mb' })); 
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+const PORT = 3000;
 const audiverisPath = process.env.AUDIVERIS_PATH || "/Applications/Audiveris.app/Contents/app";
+
 app.use('/MusicXml', express.static(path.join(__dirname, 'uploads/MusicXml')));
 app.use(express.json());
 
-// Multer setup for file upload
+// Multer setup
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
   filename: (req, file, cb) => {
@@ -70,12 +75,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Root route
-app.get('/', (req, res) => {
-  res.send('🎶 Welcome to TransposeX Backend!');
-});
-
-// Upload Endpoint
+// Upload Endpoint (Fixed)
 app.post('/upload', upload.single('musicImage'), (req, res) => {
   const sheetName = req.body.sheetName;
   if (!req.file || !sheetName) {
@@ -83,7 +83,9 @@ app.post('/upload', upload.single('musicImage'), (req, res) => {
   }
 
   const inputPath = path.resolve(req.file.path);
-  const outputDir = path.resolve('uploads/MusicXml');
+  const baseOutputDir = path.resolve('uploads/MusicXml');
+  const outputDir = path.join(baseOutputDir, `${Date.now()}_${path.parse(inputPath).name}`);
+  fs.mkdirSync(outputDir, { recursive: true });
 
   console.log(`📌 File received: ${inputPath}`);
   const command = `java -cp "${audiverisPath}/*" org.audiveris.omr.Main -batch -export -output "${outputDir}" -- "${inputPath}"`;
@@ -95,14 +97,17 @@ app.post('/upload', upload.single('musicImage'), (req, res) => {
       return res.status(500).json({ error: 'Audiveris processing error' });
     }
 
-    glob(`${outputDir}/**/*.xml`, (err, files) => {
+    console.log("🛠 Audiveris stdout:", stdout);
+    console.error("🛠 Audiveris stderr:", stderr);
+
+    glob(`${outputDir}/**/*.+(xml|mxl)`, (err, files) => {
       if (err || files.length === 0) {
-        console.error("❌ Raw XML file not found.");
+        console.error("❌ Raw XML file not found in expected folder.");
         return res.status(500).json({ error: 'XML file not found after Audiveris' });
       }
 
       const xmlFilePath = files[0];
-      const publicXmlPath = `/MusicXml/${path.relative(path.join(__dirname, 'uploads/MusicXml'), xmlFilePath)}`;
+      const publicXmlPath = `/MusicXml/${path.relative(baseOutputDir, xmlFilePath)}`;
       console.log(`✅ Found XML path: ${xmlFilePath}`);
 
       const sql = 'INSERT INTO sheets (sheetName, imageUrl, musicXMLUrl) VALUES (?, ?, ?)';
@@ -124,7 +129,7 @@ app.post('/upload', upload.single('musicImage'), (req, res) => {
   });
 });
 
-// Save Transposed Song to Library
+// Save Transposed Song
 app.post('/save-song', (req, res) => {
   const { name, xml, originalKey, transposedKey } = req.body;
 
@@ -167,7 +172,7 @@ app.get('/saved-songs', (req, res) => {
   });
 });
 
-// Delete song
+// Delete a song
 app.delete('/songs/:id', (req, res) => {
   const songId = req.params.id;
   const query = 'DELETE FROM saved_songs WHERE id = ?';
@@ -182,8 +187,7 @@ app.delete('/songs/:id', (req, res) => {
   });
 });
 
-// Transpose endpoint
-// Transpose API (uses raw XML directly)
+// Transpose Endpoint
 app.post('/api/transpose', async (req, res) => {
   const { xml, interval } = req.body;
 
@@ -215,22 +219,20 @@ app.post('/api/transpose', async (req, res) => {
   }
 });
 
+// Transpose helper
 async function transposeMXL(inputPath, interval, outputPath) {
   const xml = fs.readFileSync(inputPath, 'utf-8');
-
   const parser = new xml2js.Parser();
   const builder = new xml2js.Builder();
 
   const musicXmlObj = await parser.parseStringPromise(xml);
 
-  // Transpose logic (simplified, just update key/steps for example)
   const transposeKey = (keyObj) => {
     if (keyObj && keyObj.fifths) {
       keyObj.fifths[0] = (parseInt(keyObj.fifths[0]) + interval).toString();
     }
   };
 
-  // Transpose all <key> tags (basic example!)
   const parts = musicXmlObj['score-partwise']?.part || [];
   parts.forEach((part) => {
     const measures = part.measure || [];

@@ -1,17 +1,17 @@
 import 'dart:io';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
 class ApiService {
   static const String baseUrl =
-      "http://10.0.0.246:3000"; // ← machine's IP on the same network
-  // TODO: REPLACE THE IP ADDRESS BEFORE DEPLOYING
+      "http://10.0.0.246:3000"; // Change for deployment
   static const String audiverisUrl = "$baseUrl/upload";
   static const String transposeUrl = "https://your-transpose-api.com/transpose";
   static const String savedSongsUrl = "$baseUrl/saved-songs";
   static const String saveSongUrl = "$baseUrl/save-song";
 
-  // Upload multiple files sequentially
+  /// Upload multiple files sequentially
   static Future<bool> uploadFiles(List<String> filePaths) async {
     for (String filePath in filePaths) {
       String? result = await uploadFile(filePath, "DefaultSheetName");
@@ -20,7 +20,7 @@ class ApiService {
     return true;
   }
 
-  // Upload a single file and return the XML content
+  /// Upload a single file and return the XML content (for display)
   static Future<String?> uploadFile(String filePath, String sheetName) async {
     try {
       var request = http.MultipartRequest("POST", Uri.parse(audiverisUrl));
@@ -37,8 +37,11 @@ class ApiService {
         final xmlPath = json['xmlPath'];
 
         final xmlResponse = await http.get(Uri.parse("$baseUrl$xmlPath"));
-print("📥 Raw XML path: $xmlPath");
-print("📥 XML response body snippet: ${xmlResponse.body.substring(0, 200)}");
+        print("📥 Raw XML path: $xmlPath");
+        print(
+          "📥 XML response body snippet: ${xmlResponse.body.substring(0, 200)}",
+        );
+
         if (xmlResponse.statusCode == 200) {
           return xmlResponse.body;
         } else {
@@ -54,7 +57,45 @@ print("📥 XML response body snippet: ${xmlResponse.body.substring(0, 200)}");
     return null;
   }
 
-  // Save transposed song info to backend
+  /// NEW: Upload a file and get the response as raw bytes (e.g. MXL or XML)
+  static Future<Uint8List?> uploadFileReturningBytes(
+    String filePath,
+    String sheetName,
+  ) async {
+    try {
+      var request = http.MultipartRequest("POST", Uri.parse(audiverisUrl));
+      request.files.add(
+        await http.MultipartFile.fromPath('musicImage', filePath),
+      );
+      request.fields['sheetName'] = sheetName;
+
+      var response = await request.send();
+
+      if (response.statusCode == 200) {
+        final responseBody = await response.stream.bytesToString();
+        final json = jsonDecode(responseBody);
+        final xmlPath = json['xmlPath'];
+
+        final xmlResponse = await http.get(Uri.parse("$baseUrl$xmlPath"));
+        if (xmlResponse.statusCode == 200) {
+          print("📦 Successfully fetched raw file from $xmlPath");
+          return xmlResponse.bodyBytes;
+        } else {
+          print(
+            "❌ Failed to fetch XML/MXL bytes. Status: ${xmlResponse.statusCode}",
+          );
+        }
+      } else {
+        print("❌ Upload failed with status: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("❌ Error fetching file bytes: $e");
+    }
+
+    return null;
+  }
+
+  /// Save transposed song info to backend
   static Future<bool> saveSongToDatabase({
     required String name,
     required String xml,
@@ -86,7 +127,7 @@ print("📥 XML response body snippet: ${xmlResponse.body.substring(0, 200)}");
     }
   }
 
-  // Transpose a song using the backend
+  /// Transpose a song using backend
   static Future<String> transposeSong({
     required String xml,
     required int interval,
@@ -101,13 +142,13 @@ print("📥 XML response body snippet: ${xmlResponse.body.substring(0, 200)}");
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return data['transposedXml']; // ← new backend field
+      return data['transposedXml'];
     } else {
       throw Exception('Failed to transpose XML: ${response.body}');
     }
   }
 
-  // Fetch saved songs from the backend
+  /// Fetch saved songs from backend
   static Future<List<Map<String, dynamic>>> getSavedSongs() async {
     final response = await http.get(Uri.parse(savedSongsUrl));
     if (response.statusCode == 200) {
@@ -118,11 +159,10 @@ print("📥 XML response body snippet: ${xmlResponse.body.substring(0, 200)}");
     }
   }
 
-  // Delete a song from the library
+  /// Delete a song
   static Future<bool> deleteSongFromDatabase(int id) async {
     try {
       final response = await http.delete(Uri.parse('$baseUrl/songs/$id'));
-
       if (response.statusCode == 200) {
         print("✅ Song deleted successfully");
         return true;

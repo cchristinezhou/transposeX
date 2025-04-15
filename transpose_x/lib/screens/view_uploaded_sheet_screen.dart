@@ -57,8 +57,6 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
 
   Future<void> _loadViewerHtml() async {
     final html = await rootBundle.loadString('assets/viewer.html');
-
-    // Add a timestamp as a comment to force reload (cache busting trick)
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final htmlWithTimestamp = '$html<!-- $timestamp -->';
 
@@ -70,6 +68,11 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
         ).toString();
 
     await _controller.loadRequest(Uri.parse(encodedHtml));
+
+    // Wait a bit, then inject
+    Future.delayed(Duration(milliseconds: 500), () {
+      _injectXml();
+    });
   }
 
   @override
