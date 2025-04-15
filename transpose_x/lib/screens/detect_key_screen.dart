@@ -53,31 +53,31 @@ class _DetectKeyScreenState extends State<DetectKeyScreen> {
   }
 
   String _mapKeySignature(int fifths, String mode) {
-    const majorKeys = [
-      "F", "C", "G", "D", "A", "E", "B", "F#", "C#"
-    ];
-    const minorKeys = [
-      "D", "A", "E", "B", "F#", "C#", "G#", "D#", "A#"
-    ];
+  const sharpMajorKeys = [
+    "C", "G", "D", "A", "E", "B", "F#", "C#", "G#"
+  ];
+  const sharpMinorKeys = [
+    "A", "E", "B", "F#", "C#", "G#", "D#", "A#", "E#"
+  ];
 
-    const flatMajorKeys = [
-      "F", "B♭", "E♭", "A♭", "D♭", "G♭", "C♭"
-    ];
-    const flatMinorKeys = [
-      "D", "G", "C", "F", "B♭", "E♭", "A♭"
-    ];
+  const flatMajorKeys = [
+    "C", "F", "B♭", "E♭", "A♭", "D♭", "G♭", "C♭"
+  ];
+  const flatMinorKeys = [
+    "A", "D", "G", "C", "F", "B♭", "E♭", "A♭"
+  ];
 
-    if (fifths >= 0) {
-      return mode == "minor"
-          ? "${minorKeys[fifths]} minor"
-          : "${majorKeys[fifths]} major";
-    } else {
-      final index = -fifths;
-      return mode == "minor"
-          ? "${flatMinorKeys[index]} minor"
-          : "${flatMajorKeys[index]} major";
-    }
+  if (fifths >= 0) {
+    return mode == "minor"
+        ? "${sharpMinorKeys[fifths]} minor"
+        : "${sharpMajorKeys[fifths]} major";
+  } else {
+    final index = -fifths;
+    return mode == "minor"
+        ? "${flatMinorKeys[index]} minor"
+        : "${flatMajorKeys[index]} major";
   }
+}
 
   @override
   Widget build(BuildContext context) {

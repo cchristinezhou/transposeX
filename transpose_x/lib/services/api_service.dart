@@ -57,7 +57,7 @@ class ApiService {
     return null;
   }
 
-  /// NEW: Upload a file and get the response as raw bytes (e.g. MXL or XML)
+  /// Upload a file and get the response as raw bytes (e.g. MXL or XML)
   static Future<Uint8List?> uploadFileReturningBytes(
     String filePath,
     String sheetName,

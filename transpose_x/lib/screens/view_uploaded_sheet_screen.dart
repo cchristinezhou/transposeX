@@ -26,15 +26,16 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
             NavigationDelegate(
               onPageFinished: (url) async {
                 print("✅ WebView finished loading: $url");
-
-                final encoded = base64Encode(utf8.encode(widget.xmlContent));
-                final script = """
-    const xmlStr = atob('$encoded');
-    window.postMessage({ type: 'loadXml', xml: xmlStr });
-  """;
-                print("📦 Injecting script...");
-                await _controller.runJavaScript(script);
-                print("✅ Script injected");
+                Future.delayed(Duration(milliseconds: 300), () async {
+                  final script = _buildInjectionScript(widget.xmlContent);
+                  print("📦 Injecting script...");
+                  try {
+                    await _controller.runJavaScript(script);
+                    print("✅ Script injected");
+                  } catch (e) {
+                    print("❌ JavaScript injection failed: $e");
+                  }
+                });
               },
             ),
           );
@@ -42,17 +43,18 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
     _loadViewerHtml();
   }
 
-  Future<void> _injectXml() async {
-    try {
-      final encoded = base64Encode(utf8.encode(widget.xmlContent));
-      final script = """
-      const xmlStr = atob('$encoded');
-      window.postMessage({ type: 'loadXml', xml: xmlStr }, "*");
+  String _buildInjectionScript(String xmlContent) {
+    final encoded = base64.encode(utf8.encode(xmlContent));
+    return """
+      (function() {
+        try {
+          const xmlStr = atob("$encoded");
+          window.postMessage({ type: 'loadXml', xml: xmlStr }, "*");
+        } catch (e) {
+          console.error("⚠️ JS Injection error:", e);
+        }
+      })();
     """;
-      await _controller.runJavaScript(script);
-    } catch (e) {
-      print("⚠️ XML injection failed: $e");
-    }
   }
 
   Future<void> _loadViewerHtml() async {
@@ -68,11 +70,6 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
         ).toString();
 
     await _controller.loadRequest(Uri.parse(encodedHtml));
-
-    // Wait a bit, then inject
-    Future.delayed(Duration(milliseconds: 500), () {
-      _injectXml();
-    });
   }
 
   @override
