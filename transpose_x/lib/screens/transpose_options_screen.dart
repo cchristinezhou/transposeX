@@ -112,9 +112,16 @@ class _TransposeOptionsScreenState extends State<TransposeOptionsScreen> {
     );
   } else {
     Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const TransposingScreen()),
-    );
+  context,
+  MaterialPageRoute(
+    builder: (_) => TransposingScreen(
+      xmlContent: widget.xmlContent,
+      originalKey: widget.originalKey,
+      transposedKey: currentKey,
+      songName: "Uploaded Sheet",
+    ),
+  ),
+);
   }
 }
 

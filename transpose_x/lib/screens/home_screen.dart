@@ -1,11 +1,14 @@
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:archive/archive.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'saved_screen.dart';
-import 'profile_screen.dart';
-import 'camera_screen.dart';
-import 'view_uploaded_sheet_screen.dart';
-import '../services/api_service.dart';
 import 'package:xml/xml.dart';
+import '../services/api_service.dart';
+import 'camera_screen.dart';
+import 'profile_screen.dart';
+import 'saved_screen.dart';
+import 'view_uploaded_sheet_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -50,7 +53,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// Actual home screen content
 class HomeScreenContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -63,22 +65,12 @@ class HomeScreenContent extends StatelessWidget {
           children: [
             Text(
               "TransposeX",
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 20),
             Text(
               "How to Use Transpose X",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 15),
             RichText(
@@ -92,45 +84,29 @@ class HomeScreenContent extends StatelessWidget {
                   ),
                   TextSpan(
                     text:
-                        "Snap a photo, upload a file, or import a PDF of your sheet music. We’ll analyze it instantly.\n\n",
+                        "Snap a photo, upload a file, or import a PDF of your sheet music.\n\n",
                   ),
                   TextSpan(
                     text: "2. Detect & Adjust\n",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   TextSpan(
-                    text:
-                        "We’ll identify the key signature automatically. Select your desired key and let the magic happen.\n\n",
+                    text: "We’ll identify the key signature automatically.\n\n",
                   ),
                   TextSpan(
                     text: "3. Download & Play\n",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  TextSpan(
-                    text:
-                        "Get your transposed sheet music in seconds. Save, print, or share it effortlessly.",
-                  ),
+                  TextSpan(text: "Get your transposed sheet music in seconds."),
                 ],
               ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              "Making music easier, one key at a time.",
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-              textAlign: TextAlign.center,
             ),
             SizedBox(height: 30),
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => CameraScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => CameraScreen()),
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -142,7 +118,7 @@ class HomeScreenContent extends StatelessWidget {
               ),
               child: Text(
                 "Take a Picture",
-                style: TextStyle(fontSize: 16, color: Colors.white),
+                style: TextStyle(color: Colors.white),
               ),
             ),
             SizedBox(height: 15),
@@ -155,10 +131,7 @@ class HomeScreenContent extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
               ),
-              child: Text(
-                "Upload",
-                style: TextStyle(fontSize: 16, color: Colors.white),
-              ),
+              child: Text("Upload", style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -170,66 +143,116 @@ class HomeScreenContent extends StatelessWidget {
     final picker = ImagePicker();
     final List<XFile>? selectedFiles = await picker.pickMultiImage();
 
-    if (selectedFiles != null && selectedFiles.isNotEmpty) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => Center(child: CircularProgressIndicator()),
-      );
+    if (selectedFiles == null || selectedFiles.isEmpty) return;
 
-      try {
-        List<String> xmls = [];
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Center(child: CircularProgressIndicator()),
+    );
 
-        for (XFile file in selectedFiles) {
-          final xml = await ApiService.uploadFile(file.path, file.name);
-          if (xml != null) xmls.add(xml);
-        }
+    try {
+      List<XmlDocument> parsedDocs = [];
 
-        Navigator.pop(context); // Dismiss spinner
+      for (XFile file in selectedFiles) {
+        final bytes = await ApiService.uploadFileReturningBytes(
+          file.path,
+          file.name,
+        );
+        if (bytes == null) continue;
 
-        if (xmls.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("❌ Upload failed for all files.")),
-          );
-          return;
-        }
-
-        // Merge logic
-        final baseDoc = XmlDocument.parse(xmls.first);
-        final basePart = baseDoc.findAllElements('part').first;
-        int measureOffset = basePart.findElements('measure').length;
-
-        for (int i = 1; i < xmls.length; i++) {
-          final doc = XmlDocument.parse(xmls[i]);
-          final part = doc.findAllElements('part').first;
-          final measures = part.findElements('measure');
-
-          for (final measure in measures) {
-            final numberAttr = measure.getAttributeNode('number');
-            if (numberAttr != null) {
-              numberAttr.value =
-                  (int.parse(numberAttr.value) + measureOffset).toString();
+        // If MXL (zip), unzip and find the .xml
+        if (file.name.toLowerCase().endsWith('.mxl') || _isZip(bytes)) {
+          try {
+            final archive = ZipDecoder().decodeBytes(bytes);
+            for (final archived in archive) {
+              if (archived.name.endsWith('.xml')) {
+                final xmlStr = utf8.decode(archived.content as List<int>);
+                parsedDocs.add(XmlDocument.parse(xmlStr));
+                break;
+              }
             }
-            basePart.children.add(measure.copy());
+          } catch (e) {
+            print("❌ Failed to unzip MXL: $e");
+          }
+        } else {
+          final xmlStr = utf8.decode(bytes);
+          parsedDocs.add(XmlDocument.parse(xmlStr));
+        }
+      }
+
+      Navigator.pop(context); // Hide loading spinner
+
+      if (parsedDocs.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("❌ Upload failed or no valid XML found.")),
+        );
+        return;
+      }
+
+      // Start merging
+      final baseDoc = parsedDocs.first;
+      final score = baseDoc.rootElement;
+      final basePartList = score.getElement('part-list')!;
+      int nextPartId = 2; // Start from P2
+
+      for (int i = 1; i < parsedDocs.length; i++) {
+        final doc = parsedDocs[i];
+        final incomingScore = doc.rootElement;
+
+        // Merge part-list
+        final incomingPartList = incomingScore.getElement('part-list');
+        if (incomingPartList != null) {
+          for (final partDef in incomingPartList.findElements('score-part')) {
+            final newId = 'P$nextPartId';
+            final copied = partDef.copy();
+            copied.getAttributeNode('id')?.value = newId;
+            basePartList.children.add(copied);
+          }
+        }
+
+        // Merge parts
+        for (final part in incomingScore.findAllElements('part')) {
+          final newId = 'P$nextPartId';
+          final updatedPart = part.copy();
+          updatedPart.getAttributeNode('id')?.value = newId;
+
+          // Optional: re-number measures to avoid conflicts
+          int measureNum = 1;
+          for (final measure in updatedPart.findElements('measure')) {
+            final attr = measure.getAttributeNode('number');
+            if (attr != null) {
+              attr.value = measureNum.toString();
+            }
+            measureNum++;
           }
 
-          measureOffset += measures.length;
+          score.children.add(updatedPart);
+          nextPartId++;
         }
-
-        final mergedXml = baseDoc.toXmlString(pretty: true);
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ViewSheetScreen(xmlContent: mergedXml),
-          ),
-        );
-      } catch (e) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("❌ Error during upload: $e")),
-        );
       }
+
+      final mergedXml = baseDoc.toXmlString(pretty: true);
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ViewSheetScreen(xmlContent: mergedXml),
+        ),
+      );
+    } catch (e) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("❌ Error during upload: $e")));
     }
+  }
+
+  bool _isZip(Uint8List bytes) {
+    return bytes.length >= 4 &&
+        bytes[0] == 0x50 &&
+        bytes[1] == 0x4B &&
+        (bytes[2] == 0x03 || bytes[2] == 0x05 || bytes[2] == 0x07) &&
+        (bytes[3] == 0x04 || bytes[3] == 0x06 || bytes[3] == 0x08);
   }
 }

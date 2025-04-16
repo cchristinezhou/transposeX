@@ -4,22 +4,25 @@ const path = require('path');
 const fs = require('fs');
 const { exec } = require('child_process');
 const glob = require('glob');
-const transposeMXL = require('./transpose');
 require('dotenv').config();
 const mysql = require('mysql2');
+const xml2js = require('xml2js');
 
+process.env.TESSDATA_PREFIX = '/opt/homebrew/share'; // Set for Tesseract
+
+// MySQL connection setup
 const connection = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
-  database: process.env.DB_NAME
+  database: process.env.DB_NAME,
 });
 
 connection.connect((err) => {
   if (err) throw err;
   console.log('✅ Connected to MySQL');
 
-  const createTableQuery = `
+  const createSheetsTable = `
     CREATE TABLE IF NOT EXISTS sheets (
       id INT AUTO_INCREMENT PRIMARY KEY,
       sheetName VARCHAR(255) NOT NULL,
@@ -29,38 +32,50 @@ connection.connect((err) => {
     );
   `;
 
-  connection.query(createTableQuery, (err) => {
+  const createSavedSongsTable = `
+    CREATE TABLE IF NOT EXISTS saved_songs (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      xml LONGTEXT NOT NULL,
+      originalKey VARCHAR(100),
+      transposedKey VARCHAR(100),
+      createdTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  connection.query(createSheetsTable, (err) => {
     if (err) throw err;
     console.log('📄 Table "sheets" is ready');
   });
+
+  connection.query(createSavedSongsTable, (err) => {
+    if (err) throw err;
+    console.log('📄 Table "saved_songs" is ready');
+  });
 });
 
-console.log("📌 Checking if .env is loaded:", process.env.AUDIVERIS_PATH);
-
-const audiverisPath = process.env.AUDIVERIS_PATH || "/Applications/Audiveris.app/Contents/app";
 const app = express();
+app.use(express.json({ limit: '20mb' })); 
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
 const PORT = 3000;
+const audiverisPath = process.env.AUDIVERIS_PATH || "/Applications/Audiveris.app/Contents/app";
 
 app.use('/MusicXml', express.static(path.join(__dirname, 'uploads/MusicXml')));
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    const sanitizedOriginal = file.originalname.replace(/[^a-zA-Z0-9.]/g, '_');
-    const uniqueName = Date.now() + '-' + sanitizedOriginal;
-    cb(null, uniqueName);
-  }
-});
-
-const upload = multer({ storage });
 app.use(express.json());
 
-app.get('/', (req, res) => {
-  res.send('🎶 Welcome to TransposeX Backend!');
+// Multer setup
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'uploads/'),
+  filename: (req, file, cb) => {
+    const sanitized = file.originalname.replace(/[^a-zA-Z0-9.]/g, '_');
+    const unique = Date.now() + '-' + sanitized;
+    cb(null, unique);
+  },
 });
+const upload = multer({ storage });
 
+// Upload Endpoint (Fixed)
 app.post('/upload', upload.single('musicImage'), (req, res) => {
   const sheetName = req.body.sheetName;
   if (!req.file || !sheetName) {
@@ -68,10 +83,11 @@ app.post('/upload', upload.single('musicImage'), (req, res) => {
   }
 
   const inputPath = path.resolve(req.file.path);
-  const outputDir = path.resolve('uploads/MusicXml');
+  const baseOutputDir = path.resolve('uploads/MusicXml');
+  const outputDir = path.join(baseOutputDir, `${Date.now()}_${path.parse(inputPath).name}`);
+  fs.mkdirSync(outputDir, { recursive: true });
 
   console.log(`📌 File received: ${inputPath}`);
-
   const command = `java -cp "${audiverisPath}/*" org.audiveris.omr.Main -batch -export -output "${outputDir}" -- "${inputPath}"`;
   console.log("📌 Running Audiveris Command:", command);
 
@@ -81,68 +97,159 @@ app.post('/upload', upload.single('musicImage'), (req, res) => {
       return res.status(500).json({ error: 'Audiveris processing error' });
     }
 
-    // Search for any .xml file generated under MusicXml recursively
-    glob(`${outputDir}/**/*.xml`, (err, files) => {
+    console.log("🛠 Audiveris stdout:", stdout);
+    console.error("🛠 Audiveris stderr:", stderr);
+
+    glob(`${outputDir}/**/*.+(xml|mxl)`, (err, files) => {
       if (err || files.length === 0) {
-        console.error("❌ Raw XML file not found. Something went wrong.");
-        return res.status(500).json({ error: 'Raw XML file not found after Audiveris execution' });
+        console.error("❌ Raw XML file not found in expected folder.");
+        return res.status(500).json({ error: 'XML file not found after Audiveris' });
       }
 
       const xmlFilePath = files[0];
-      const publicXmlPath = `/MusicXml/${path.relative(path.join(__dirname, 'uploads/MusicXml'), xmlFilePath)}`;
+      const publicXmlPath = `/MusicXml/${path.relative(baseOutputDir, xmlFilePath)}`;
       console.log(`✅ Found XML path: ${xmlFilePath}`);
 
       const sql = 'INSERT INTO sheets (sheetName, imageUrl, musicXMLUrl) VALUES (?, ?, ?)';
       connection.query(sql, [sheetName, inputPath, publicXmlPath], (err, result) => {
         if (err) {
-          console.error("❌ Database insert failed:", err);
+          console.error("❌ DB insert failed:", err);
           return res.status(500).json({ error: 'Database insert failed', details: err });
         }
 
         res.json({
           message: '✅ File uploaded and saved to database',
           sheetId: result.insertId,
-          sheetName: sheetName,
+          sheetName,
           filePath: inputPath,
-          xmlPath: publicXmlPath // used in Flutter client to fetch the XML
+          xmlPath: publicXmlPath,
         });
       });
     });
   });
 });
 
-app.post('/api/transpose', async (req, res) => {
-  const { inputPath, interval, outputPath } = req.body;
+// Save Transposed Song
+app.post('/save-song', (req, res) => {
+  const { name, xml, originalKey, transposedKey } = req.body;
 
-  if (!inputPath || !outputPath || isNaN(interval)) {
-    return res.status(400).json({
-      code: 'BAD_REQUEST',
-      message: 'Missing or invalid parameters.'
-    });
+  if (!name || !xml || !originalKey || !transposedKey) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  const sql = `
+    INSERT INTO saved_songs (name, xml, originalKey, transposedKey)
+    VALUES (?, ?, ?, ?)
+  `;
+
+  connection.query(sql, [name, xml, originalKey, transposedKey], (err, result) => {
+    if (err) {
+      console.error("❌ Failed to insert song:", err);
+      return res.status(500).json({ error: "Failed to save song" });
+    }
+
+    console.log(`✅ Saved transposed song: ${name} (ID: ${result.insertId})`);
+    res.json({ message: "✅ Song saved successfully", songId: result.insertId });
+  });
+});
+
+// Get all saved songs
+app.get('/saved-songs', (req, res) => {
+  const sql = `
+    SELECT id, name, xml, originalKey, transposedKey, createdTime
+    FROM saved_songs
+    ORDER BY createdTime DESC
+  `;
+
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error('❌ Failed to fetch saved songs:', err);
+      return res.status(500).json({ error: 'Failed to fetch saved songs' });
+    }
+
+    console.log(`✅ Fetched ${results.length} saved songs`);
+    res.json(results);
+  });
+});
+
+// Delete a song
+app.delete('/songs/:id', (req, res) => {
+  const songId = req.params.id;
+  const query = 'DELETE FROM saved_songs WHERE id = ?';
+
+  connection.query(query, [songId], (err, results) => {
+    if (err) {
+      console.error("❌ Failed to delete song:", err);
+      return res.status(500).json({ error: 'Failed to delete song' });
+    }
+
+    res.json({ message: '✅ Song deleted successfully' });
+  });
+});
+
+// Transpose Endpoint
+app.post('/api/transpose', async (req, res) => {
+  const { xml, interval } = req.body;
+
+  if (!xml || isNaN(interval)) {
+    return res.status(400).json({ code: 'BAD_REQUEST', message: 'Missing or invalid parameters.' });
   }
 
   try {
+    const tmpDir = path.join(__dirname, 'uploads/tmp');
+    const inputPath = path.join(tmpDir, 'original.xml');
+    const outputPath = path.join(tmpDir, 'transposed.xml');
+
+    if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+    fs.writeFileSync(inputPath, xml, 'utf-8');
+
     await transposeMXL(inputPath, Number(interval), outputPath);
+    const transposedXml = fs.readFileSync(outputPath, 'utf-8');
+
     res.status(200).json({
-      message: 'Transposition completed successfully',
-      downloadPath: outputPath
+      message: 'Transposition successful',
+      transposedXml,
     });
   } catch (err) {
-    if (err.message.includes('No .xml')) {
-      res.status(422).json({
-        code: 'TRANSPOSE_FAILED',
-        message: 'MusicXML file could not be processed.'
-      });
-    } else {
-      console.error('❌ Transposition error:', err.message);
-      res.status(500).json({
-        code: 'SYSTEM_ERROR',
-        message: 'Internal server error during transposition.'
-      });
-    }
+    console.error('❌ Transposition error:', err.message);
+    res.status(500).json({
+      code: 'SYSTEM_ERROR',
+      message: 'Internal server error during transposition.',
+    });
   }
 });
 
+// Transpose helper
+async function transposeMXL(inputPath, interval, outputPath) {
+  const xml = fs.readFileSync(inputPath, 'utf-8');
+  const parser = new xml2js.Parser();
+  const builder = new xml2js.Builder();
+
+  const musicXmlObj = await parser.parseStringPromise(xml);
+
+  const transposeKey = (keyObj) => {
+    if (keyObj && keyObj.fifths) {
+      keyObj.fifths[0] = (parseInt(keyObj.fifths[0]) + interval).toString();
+    }
+  };
+
+  const parts = musicXmlObj['score-partwise']?.part || [];
+  parts.forEach((part) => {
+    const measures = part.measure || [];
+    measures.forEach((measure) => {
+      if (measure.attributes && measure.attributes[0].key) {
+        transposeKey(measure.attributes[0].key[0]);
+      }
+    });
+  });
+
+  const transposedXml = builder.buildObject(musicXmlObj);
+  fs.writeFileSync(outputPath, transposedXml, 'utf-8');
+}
+
+module.exports = transposeMXL;
+
+// Start server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server is running on http://0.0.0.0:${PORT}`);
 });

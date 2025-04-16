@@ -8,12 +8,14 @@ import '../utils/file_export.dart';
 class ViewSheetScreen extends StatefulWidget {
   final String xmlContent;
   final String keySignature;
+  final String fileName;
   final String initialTitle;
 
   const ViewSheetScreen({
     Key? key,
     required this.xmlContent,
     required this.keySignature,
+    required this.fileName,
     this.initialTitle = "Untitled Sheet",
   }) : super(key: key);
 
@@ -29,7 +31,9 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
   @override
   void initState() {
     super.initState();
-    _title = widget.initialTitle;
+    _title = widget.fileName.isNotEmpty
+        ? widget.fileName
+        : widget.initialTitle; 
     _initializeWebView();
   }
 
