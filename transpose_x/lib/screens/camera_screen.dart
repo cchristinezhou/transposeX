@@ -3,8 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:archive/archive.dart';
+import 'dart:typed_data';
+import 'dart:convert';
 import 'package:xml/xml.dart';
 import 'view_uploaded_sheet_screen.dart';
+import '../utils/xml_merge_helper.dart';
 
 class CameraScreen extends StatefulWidget {
   @override
@@ -66,6 +70,78 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
+  Future<void> _uploadAndMerge() async {
+    if (_capturedImages.isEmpty) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      List<XmlDocument> parsedDocs = [];
+
+      for (XFile image in _capturedImages) {
+        final bytes = await ApiService.uploadFileReturningBytes(
+          image.path,
+          image.name,
+        );
+        if (bytes == null) continue;
+
+        // If MXL (zip), unzip and find the .xml
+        if (_isZip(bytes)) {
+          try {
+            final archive = ZipDecoder().decodeBytes(bytes);
+            for (final archived in archive) {
+              if (archived.name.endsWith('.xml')) {
+                final xmlStr = utf8.decode(archived.content as List<int>);
+                parsedDocs.add(XmlDocument.parse(xmlStr));
+                break;
+              }
+            }
+          } catch (e) {
+            print("❌ Failed to unzip MXL: $e");
+          }
+        } else {
+          final xmlStr = utf8.decode(bytes);
+          parsedDocs.add(XmlDocument.parse(xmlStr));
+        }
+      }
+
+      Navigator.pop(context); // Hide loading spinner
+
+      if (parsedDocs.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("❌ Upload failed or no valid XML found.")),
+        );
+        return;
+      }
+
+      final mergedXml = XmlMergeHelper.mergeXmlDocuments(parsedDocs);
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ViewSheetScreen(xmlContent: mergedXml),
+        ),
+      );
+    } catch (e) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("❌ Error uploading images: $e")));
+    }
+  }
+
+  bool _isZip(Uint8List bytes) {
+    return bytes.length >= 4 &&
+        bytes[0] == 0x50 &&
+        bytes[1] == 0x4B &&
+        (bytes[2] == 0x03 || bytes[2] == 0x05 || bytes[2] == 0x07) &&
+        (bytes[3] == 0x04 || bytes[3] == 0x06 || bytes[3] == 0x08);
+  }
+
   @override
   void dispose() {
     _cameraController?.dispose();
@@ -88,9 +164,10 @@ class _CameraScreenState extends State<CameraScreen> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: _isCameraInitialized
-                ? CameraPreview(_cameraController!)
-                : Center(child: CircularProgressIndicator()),
+            child:
+                _isCameraInitialized
+                    ? CameraPreview(_cameraController!)
+                    : Center(child: CircularProgressIndicator()),
           ),
           if (_capturedImages.isNotEmpty)
             Positioned(
@@ -102,10 +179,10 @@ class _CameraScreenState extends State<CameraScreen> {
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    for (int i = 0; i < _capturedImages.length; i++)
+                    for (int i = 0; i < _capturedImages.length && i < 5; i++)
                       Positioned(
-                        top: (i < 5) ? i * 3.0 : 15.0,
-                        right: (i < 5) ? i * 3.0 : 15.0,
+                        top: i * 3.0,
+                        right: i * 3.0,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.file(
@@ -168,69 +245,7 @@ class _CameraScreenState extends State<CameraScreen> {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () async {
-                    if (_capturedImages.isEmpty) return;
-
-                    showDialog(
-                      context: context,
-                      barrierDismissible: false,
-                      builder: (_) => Center(child: CircularProgressIndicator()),
-                    );
-
-                    try {
-                      List<String> xmls = [];
-
-                      for (XFile image in _capturedImages) {
-                        final xml = await ApiService.uploadFile(image.path, image.name);
-                        if (xml != null) xmls.add(xml);
-                      }
-
-                      Navigator.pop(context);
-
-                      if (xmls.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("❌ Upload failed.")),
-                        );
-                        return;
-                      }
-
-                      // Merge XMLs
-                      final baseDoc = XmlDocument.parse(xmls.first);
-                      final basePart = baseDoc.findAllElements('part').first;
-                      int measureOffset = basePart.findElements('measure').length;
-
-                      for (int i = 1; i < xmls.length; i++) {
-                        final doc = XmlDocument.parse(xmls[i]);
-                        final part = doc.findAllElements('part').first;
-                        final measures = part.findElements('measure');
-
-                        for (final measure in measures) {
-                          final numberAttr = measure.getAttributeNode('number');
-                          if (numberAttr != null) {
-                            numberAttr.value =
-                                (int.parse(numberAttr.value) + measureOffset).toString();
-                          }
-                          basePart.children.add(measure.copy());
-                        }
-
-                        measureOffset += measures.length;
-                      }
-
-                      final mergedXml = baseDoc.toXmlString(pretty: true);
-
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ViewSheetScreen(xmlContent: mergedXml),
-                        ),
-                      );
-                    } catch (e) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("❌ Error uploading images: $e")),
-                      );
-                    }
-                  },
+                  onTap: _uploadAndMerge,
                   child: Container(
                     width: 50,
                     height: 50,
