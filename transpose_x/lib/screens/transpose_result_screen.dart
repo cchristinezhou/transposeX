@@ -33,12 +33,7 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
   late final WebViewController _controller;
   final GlobalKey previewContainer = GlobalKey();
 
-  File? _pdfFile;
-  File? _jpegFile;
   int? _xmlSize;
-  int? _pdfSize;
-  int? _jpegSize;
-
   bool _showPreview = false;
 
   @override
@@ -49,23 +44,21 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
   }
 
   void _initializeViewer() {
-    _controller =
-        WebViewController()
-          ..setJavaScriptMode(JavaScriptMode.unrestricted)
-          ..setNavigationDelegate(
-            NavigationDelegate(onPageFinished: (_) => _loadXml()),
-          );
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(onPageFinished: (_) => _loadXml()),
+      );
     _loadViewerHtml();
   }
 
   Future<void> _loadViewerHtml() async {
     final html = await rootBundle.loadString('assets/viewer.html');
-    final encodedHtml =
-        Uri.dataFromString(
-          html,
-          mimeType: 'text/html',
-          encoding: Encoding.getByName('utf-8'),
-        ).toString();
+    final encodedHtml = Uri.dataFromString(
+      html,
+      mimeType: 'text/html',
+      encoding: Encoding.getByName('utf-8'),
+    ).toString();
     _controller.loadRequest(Uri.parse(encodedHtml));
   }
 
@@ -80,34 +73,12 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
 
   Future<void> _generateExportFiles() async {
     final directory = await getTemporaryDirectory();
-
     final xmlFile = await saveXmlFile(widget.transposedXml, directory);
     final xmlSize = await xmlFile.length();
 
-    final pdfFile = await convertWebViewToPdf(_controller, directory);
-
-    if (!mounted) return;
-    setState(() => _showPreview = true);
-
-    await Future.delayed(Duration(milliseconds: 500));
-
-    final jpegFile = await captureWebViewToImage(previewContainer, directory);
-
-    await Future.delayed(Duration(seconds: 3));
-
-    if (!mounted) return;
-    setState(() => _showPreview = false);
-
-    final pdfSize = await pdfFile.length();
-    final jpegSize = await jpegFile.length();
-
-    if (!mounted) return;
     setState(() {
       _xmlSize = xmlSize;
-      _pdfSize = pdfSize;
-      _jpegSize = jpegSize;
-      _pdfFile = pdfFile;
-      _jpegFile = jpegFile;
+      _showPreview = true;
     });
   }
 
@@ -122,24 +93,12 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
               child: Stack(
                 children: [
                   WebViewWidget(controller: _controller),
-                  AnimatedOpacity(
-                    opacity: _showPreview ? 1.0 : 0.0,
-                    duration: Duration(milliseconds: 300),
-                    child: Visibility(
-                      visible: _showPreview,
-                      maintainSize: true,
-                      maintainAnimation: true,
-                      maintainState: true,
-                      child: Align(
-                        alignment: Alignment.topCenter,
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 40),
-                          child: RepaintBoundary(
-                            key: previewContainer,
-                            child: _buildSheetPreview(),
-                          ),
-                        ),
-                      ),
+                  Opacity(
+                    opacity: 0.0,
+                    alwaysIncludeSemantics: false,
+                    child: RepaintBoundary(
+                      key: previewContainer,
+                      child: _buildSheetPreview(),
                     ),
                   ),
                 ],
@@ -148,16 +107,20 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
             const SizedBox(height: 24),
             Column(
               children: [
-                _buildButton(Icons.remove_red_eye_outlined, "View", () {
+                _buildButton(Icons.remove_red_eye_outlined, "View", () async {
+                  await _controller.runJavaScript(
+                    "document.body.innerHTML = '';",
+                  );
+                  await Future.delayed(Duration(milliseconds: 100));
+
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder:
-                          (_) => ViewSheetScreen(
-                            keySignature: widget.transposedKey,
-                            xmlContent: widget.transposedXml,
-                            fileName: widget.songName ?? "Untitled Song",
-                          ),
+                      builder: (_) => ViewSheetScreen(
+                        keySignature: widget.transposedKey,
+                        xmlContent: widget.transposedXml,
+                        fileName: widget.songName ?? "Untitled Song",
+                      ),
                     ),
                   );
                 }),
@@ -168,9 +131,9 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
                   _handleSaveToLibrary,
                 ),
                 const SizedBox(height: 10),
-                _buildButton(Icons.download, "Download", _showDownloadOptions),
+                _buildButton(Icons.download, "Download XML", _downloadXml),
                 const SizedBox(height: 10),
-                _buildButton(Icons.share, "Share", () {
+                _buildButton(Icons.share, "Share XML", () {
                   shareXmlContent(widget.transposedXml);
                 }),
                 const SizedBox(height: 10),
@@ -256,103 +219,65 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
 
   void _handleSaveToLibrary() {
     final TextEditingController controller = TextEditingController();
-
-    // Capture the scaffold context *before* the dialog
     final scaffoldContext = context;
 
     showDialog(
       context: scaffoldContext,
-      builder:
-          (dialogContext) => AlertDialog(
-            title: Text("Name your sheet"),
-            content: TextField(
-              controller: controller,
-              decoration: InputDecoration(hintText: "e.g. My Transposed Song"),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: Text("Cancel"),
-              ),
-              TextButton(
-                onPressed: () async {
-                  final name = controller.text.trim();
-
-                  Navigator.pop(dialogContext); // Always dismiss dialog first
-
-                  if (name.isEmpty) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                        SnackBar(content: Text("❗ Please enter a name.")),
-                      );
-                    }
-                    return;
-                  }
-
-                  final success = await ApiService.saveSongToDatabase(
-                    name: name,
-                    xml: widget.transposedXml,
-                    originalKey: widget.originalKey,
-                    transposedKey: widget.transposedKey,
-                  );
-
-                  if (!mounted) return;
-
-                  ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        success
-                            ? "✅ Saved to library as \"$name\""
-                            : "❌ Failed to save. Try again.",
-                      ),
-                    ),
-                  );
-                },
-                child: Text("Save"),
-              ),
-            ],
+      builder: (dialogContext) => AlertDialog(
+        title: Text("Name your sheet"),
+        content: TextField(
+          controller: controller,
+          decoration: InputDecoration(hintText: "e.g. My Transposed Song"),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text("Cancel"),
           ),
+          TextButton(
+            onPressed: () async {
+              final name = controller.text.trim();
+              Navigator.pop(dialogContext);
+
+              if (name.isEmpty) {
+                if (mounted) {
+                  ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                    SnackBar(content: Text("❗ Please enter a name.")),
+                  );
+                }
+                return;
+              }
+
+              final success = await ApiService.saveSongToDatabase(
+                name: name,
+                xml: widget.transposedXml,
+                originalKey: widget.originalKey,
+                transposedKey: widget.transposedKey,
+              );
+
+              if (!mounted) return;
+
+              ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    success
+                        ? "✅ Saved to library as \"$name\""
+                        : "❌ Failed to save. Try again.",
+                  ),
+                ),
+              );
+            },
+            child: Text("Save"),
+          ),
+        ],
+      ),
     );
   }
 
-  void _showDownloadOptions() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder:
-          (context) => Container(
-            padding: const EdgeInsets.symmetric(vertical: 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildDownloadOption(
-                  "PDF",
-                  _pdfSize,
-                  Icons.picture_as_pdf,
-                  () async {
-                    if (_pdfFile != null) {
-                      await saveToDownloads(_pdfFile!);
-                      _showSuccessSnackBar();
-                    }
-                  },
-                ),
-                _buildDownloadOption("XML", _xmlSize, Icons.code, () async {
-                  final file = await saveXmlFile(widget.transposedXml);
-                  await saveToDownloads(file);
-                  _showSuccessSnackBar();
-                }),
-                _buildDownloadOption("JPEG", _jpegSize, Icons.image, () async {
-                  if (_jpegFile != null) {
-                    await saveToDownloads(_jpegFile!);
-                    _showSuccessSnackBar();
-                  }
-                }),
-              ],
-            ),
-          ),
-    );
+  void _downloadXml() async {
+    final file = await saveXmlFile(widget.transposedXml);
+    await saveToDownloads(file);
+    _showSuccessSnackBar();
   }
 
   void _showSuccessSnackBar() {
@@ -369,33 +294,5 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
         duration: Duration(seconds: 2),
       ),
     );
-  }
-
-  Widget _buildDownloadOption(
-    String label,
-    int? size,
-    IconData icon,
-    VoidCallback onTap,
-  ) {
-    final sizeText = size != null ? _formatFileSize(size) : 'Loading...';
-    return ListTile(
-      leading: Icon(icon, color: Colors.black),
-      title: Text(label),
-      trailing: Text(sizeText),
-      onTap: () {
-        Navigator.pop(context);
-        onTap();
-      },
-    );
-  }
-
-  String _formatFileSize(int bytes) {
-    if (bytes >= 1024 * 1024) {
-      return "${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB";
-    } else if (bytes >= 1024) {
-      return "${(bytes / 1024).toStringAsFixed(1)} KB";
-    } else {
-      return "$bytes B";
-    }
   }
 }

@@ -10,6 +10,12 @@ const xml2js = require('xml2js');
 
 process.env.TESSDATA_PREFIX = '/opt/homebrew/share'; // Set for Tesseract
 
+const musescorePath = process.env.MUSESCORE_PATH;
+const audiverisPath = process.env.AUDIVERIS_PATH || "/Applications/Audiveris.app/Contents/app";
+
+const app = express();
+const PORT = 3000;
+
 // MySQL connection setup
 const connection = mysql.createConnection({
   host: process.env.DB_HOST,
@@ -54,12 +60,8 @@ connection.connect((err) => {
   });
 });
 
-const app = express();
 app.use(express.json({ limit: '20mb' })); 
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-const PORT = 3000;
-const audiverisPath = process.env.AUDIVERIS_PATH || "/Applications/Audiveris.app/Contents/app";
 
 app.use('/MusicXml', express.static(path.join(__dirname, 'uploads/MusicXml')));
 app.use(express.json());
@@ -75,7 +77,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Upload Endpoint (Fixed)
+// Upload Endpoint
 app.post('/upload', upload.single('musicImage'), (req, res) => {
   const sheetName = req.body.sheetName;
   if (!req.file || !sheetName) {

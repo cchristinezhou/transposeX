@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:path_provider/path_provider.dart';
+
 import '../utils/file_export.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ViewSheetScreen extends StatefulWidget {
   final String xmlContent;
@@ -28,21 +30,23 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
   late String _title;
   double _zoomFactor = 1.0;
 
+  final GlobalKey _previewKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
-    _title = widget.fileName.isNotEmpty
-        ? widget.fileName
-        : widget.initialTitle; 
+    _title = widget.fileName.isNotEmpty ? widget.fileName : widget.initialTitle;
     _initializeWebView();
   }
 
   void _initializeWebView() {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(NavigationDelegate(
-        onPageFinished: (_) => _injectXml(widget.xmlContent),
-      ));
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (_) => _injectXml(widget.xmlContent),
+        ),
+      );
     _loadViewerHtml();
   }
 
@@ -110,28 +114,30 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) => Container(
-        padding: EdgeInsets.symmetric(vertical: 24),
+        padding: const EdgeInsets.symmetric(vertical: 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildDownloadOption("PDF", Icons.picture_as_pdf, () async {
-              final dir = await getTemporaryDirectory();
-              final pdf = await convertWebViewToPdf(_controller, dir);
-              await saveToDownloads(pdf);
-            }),
             _buildDownloadOption("XML", Icons.code, () async {
-              final file = await saveXmlFile(widget.xmlContent);
-              await saveToDownloads(file);
-            }),
-            _buildDownloadOption("JPEG", Icons.image, () async {
-              final dir = await getTemporaryDirectory();
-              final jpeg = await captureWebViewToImage(GlobalKey(), dir); // Replace with real preview if needed
-              await saveToDownloads(jpeg);
+              try {
+                final file = await saveXmlFile(widget.xmlContent);
+                await saveToDownloads(file);
+                _showSuccessSnackBar();
+              } catch (e) {
+                print('❌ XML save failed: $e');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("❌ Failed to save XML.")),
+                );
+              }
             }),
           ],
         ),
       ),
     );
+  }
+
+  void _shareXml() {
+    shareXmlContent(widget.xmlContent);
   }
 
   Widget _buildDownloadOption(String label, IconData icon, VoidCallback onTap) {
@@ -145,10 +151,6 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
     );
   }
 
-  void _shareXml() {
-    shareXmlContent(widget.xmlContent);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -159,14 +161,8 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
         foregroundColor: Colors.black,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: Icon(Icons.zoom_in),
-            onPressed: () => _zoom(1.2),
-          ),
-          IconButton(
-            icon: Icon(Icons.zoom_out),
-            onPressed: () => _zoom(0.8),
-          ),
+          IconButton(icon: Icon(Icons.zoom_in), onPressed: () => _zoom(1.2)),
+          IconButton(icon: Icon(Icons.zoom_out), onPressed: () => _zoom(0.8)),
           PopupMenuButton<String>(
             onSelected: (value) {
               if (value == "Rename") {
@@ -179,13 +175,32 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
             },
             itemBuilder: (context) => [
               PopupMenuItem(value: "Rename", child: Text("Rename")),
-              PopupMenuItem(value: "Download", child: Text("Download")),
-              PopupMenuItem(value: "Share", child: Text("Share")),
+              PopupMenuItem(value: "Download", child: Text("Download XML")),
+              PopupMenuItem(value: "Share", child: Text("Share XML")),
             ],
-          )
+          ),
         ],
       ),
-      body: WebViewWidget(controller: _controller),
+      body: RepaintBoundary(
+        key: _previewKey,
+        child: WebViewWidget(controller: _controller),
+      ),
+    );
+  }
+
+  void _showSuccessSnackBar() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: const [
+            Icon(Icons.check_circle_outline, color: Colors.white),
+            SizedBox(width: 12),
+            Text("Download successful!"),
+          ],
+        ),
+        backgroundColor: Colors.green[600],
+        duration: Duration(seconds: 2),
+      ),
     );
   }
 }
