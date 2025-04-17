@@ -14,13 +14,29 @@ Future<File> saveXmlFile(String xmlContent, [Directory? directory]) async {
   return file;
 }
 
-/// Share XML
-Future<void> shareXmlContent(String xmlContent) async {
+/// Share XML (with optional context to show Snackbar)
+Future<void> shareXmlContent(String xmlContent, {BuildContext? context}) async {
   final file = await saveXmlFile(xmlContent);
-  Share.shareXFiles(
+  await Share.shareXFiles(
     [XFile(file.path)],
     text: 'Check out my transposed sheet music!',
   );
+
+  if (context != null && context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: const [
+            Icon(Icons.check_circle_outline, color: Colors.white),
+            SizedBox(width: 12),
+            Text("Share Successful!"),
+          ],
+        ),
+        backgroundColor: Colors.green[600],
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
 }
 
 /// Save to Downloads folder

@@ -1,3 +1,4 @@
+// camera_screen.dart
 import '../services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
@@ -35,12 +36,8 @@ class _CameraScreenState extends State<CameraScreen> {
         ResolutionPreset.medium,
       );
       await _cameraController!.initialize();
-
       if (!mounted) return;
-
-      setState(() {
-        _isCameraInitialized = true;
-      });
+      setState(() => _isCameraInitialized = true);
     } catch (e) {
       print("Error initializing camera: $e");
     }
@@ -48,12 +45,9 @@ class _CameraScreenState extends State<CameraScreen> {
 
   Future<void> _captureImage() async {
     if (!_isCameraInitialized || _cameraController == null) return;
-
     try {
       final XFile image = await _cameraController!.takePicture();
-      setState(() {
-        _capturedImages.add(image);
-      });
+      setState(() => _capturedImages.add(image));
     } catch (e) {
       print("Error capturing image: $e");
     }
@@ -62,11 +56,8 @@ class _CameraScreenState extends State<CameraScreen> {
   Future<void> _pickImagesFromGallery() async {
     final picker = ImagePicker();
     final List<XFile>? selectedImages = await picker.pickMultiImage();
-
     if (selectedImages != null && selectedImages.isNotEmpty) {
-      setState(() {
-        _capturedImages.addAll(selectedImages);
-      });
+      setState(() => _capturedImages.addAll(selectedImages));
     }
   }
 
@@ -83,13 +74,9 @@ class _CameraScreenState extends State<CameraScreen> {
       List<XmlDocument> parsedDocs = [];
 
       for (XFile image in _capturedImages) {
-        final bytes = await ApiService.uploadFileReturningBytes(
-          image.path,
-          image.name,
-        );
+        final bytes = await ApiService.uploadFileReturningBytes(image.path, image.name);
         if (bytes == null) continue;
 
-        // If MXL (zip), unzip and find the .xml
         if (_isZip(bytes)) {
           try {
             final archive = ZipDecoder().decodeBytes(bytes);
@@ -109,12 +96,10 @@ class _CameraScreenState extends State<CameraScreen> {
         }
       }
 
-      Navigator.pop(context); // Hide loading spinner
+      Navigator.pop(context); // Hide spinner
 
       if (parsedDocs.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("❌ Upload failed or no valid XML found.")),
-        );
+        _showWarningDialog();
         return;
       }
 
@@ -128,9 +113,7 @@ class _CameraScreenState extends State<CameraScreen> {
       );
     } catch (e) {
       Navigator.pop(context);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("❌ Error uploading images: $e")));
+      _showWarningDialog();
     }
   }
 
@@ -140,6 +123,32 @@ class _CameraScreenState extends State<CameraScreen> {
         bytes[1] == 0x4B &&
         (bytes[2] == 0x03 || bytes[2] == 0x05 || bytes[2] == 0x07) &&
         (bytes[3] == 0x04 || bytes[3] == 0x06 || bytes[3] == 0x08);
+  }
+
+  void _showWarningDialog() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text("Warning", style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(
+          "We couldn't recognize your image(s). Make sure your photo is clear, well-lit, and shows the full sheet music. Try again or pick a different image.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel", style: TextStyle(color: Color(0xFF62558B))),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _uploadAndMerge();
+            },
+            child: Text("Retry", style: TextStyle(color: Color(0xFF62558B))),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -164,110 +173,100 @@ class _CameraScreenState extends State<CameraScreen> {
       body: Stack(
         children: [
           Positioned.fill(
-            child:
-                _isCameraInitialized
-                    ? CameraPreview(_cameraController!)
-                    : Center(child: CircularProgressIndicator()),
+            child: _isCameraInitialized
+                ? CameraPreview(_cameraController!)
+                : Center(child: CircularProgressIndicator()),
           ),
           if (_capturedImages.isNotEmpty)
             Positioned(
               bottom: 20,
               right: 20,
-              child: SizedBox(
-                width: 70,
-                height: 70,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    for (int i = 0; i < _capturedImages.length && i < 5; i++)
-                      Positioned(
-                        top: i * 3.0,
-                        right: i * 3.0,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.file(
-                            File(_capturedImages[i].path),
-                            width: 60,
-                            height: 60,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: Container(
-                        padding: EdgeInsets.all(5),
-                        decoration: BoxDecoration(
-                          color: Colors.purple,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          _capturedImages.length.toString(),
-                          style: TextStyle(color: Colors.white, fontSize: 12),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              child: _buildCapturedImageThumbnails(),
             ),
         ],
       ),
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
+      bottomNavigationBar: _buildCameraControls(),
+    );
+  }
+
+  Widget _buildCapturedImageThumbnails() {
+    return SizedBox(
+      width: 70,
+      height: 70,
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 30),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: Icon(
-                    Icons.photo,
-                    size: 30,
-                    color: Color.fromARGB(255, 98, 85, 139),
-                  ),
-                  onPressed: _pickImagesFromGallery,
+          for (int i = 0; i < _capturedImages.length && i < 5; i++)
+            Positioned(
+              top: i * 3.0,
+              right: i * 3.0,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.file(
+                  File(_capturedImages[i].path),
+                  width: 60,
+                  height: 60,
+                  fit: BoxFit.cover,
                 ),
-                GestureDetector(
-                  onTap: _captureImage,
-                  child: Container(
-                    width: 70,
-                    height: 70,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Color.fromARGB(255, 98, 85, 139),
-                        width: 5,
-                      ),
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: _uploadAndMerge,
-                  child: Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.transparent,
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(6),
-                      child: Icon(
-                        Icons.check_circle,
-                        size: 40,
-                        color: Color.fromARGB(255, 98, 85, 139),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
+            ),
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Container(
+              padding: EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: Colors.purple,
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                _capturedImages.length.toString(),
+                style: TextStyle(color: Colors.white, fontSize: 12),
+              ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCameraControls() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 30, vertical: 30),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: Icon(Icons.photo, size: 30, color: Color(0xFF62558B)),
+                onPressed: _pickImagesFromGallery,
+              ),
+              GestureDetector(
+                onTap: _captureImage,
+                child: Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Color(0xFF62558B), width: 5),
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: _uploadAndMerge,
+                child: Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(shape: BoxShape.circle),
+                  child: Icon(Icons.check_circle, size: 40, color: Color(0xFF62558B)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
