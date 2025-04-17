@@ -255,3 +255,31 @@ module.exports = transposeMXL;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server is running on http://0.0.0.0:${PORT}`);
 });
+
+// Rename Sheet Endpoint
+app.post('/rename-sheet', (req, res) => {
+  const { oldName, newName } = req.body;
+
+  if (!oldName || !newName) {
+    return res.status(400).json({ error: 'Missing oldName or newName' });
+  }
+
+  const sql = `
+    UPDATE saved_songs
+    SET name = ?
+    WHERE name = ?
+  `;
+
+  connection.query(sql, [newName, oldName], (err, result) => {
+    if (err) {
+      console.error('❌ Failed to rename sheet:', err);
+      return res.status(500).json({ error: 'Failed to rename sheet' });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Sheet not found' });
+    }
+
+    res.json({ message: '✅ Sheet renamed successfully' });
+  });
+});

@@ -44,21 +44,23 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
   }
 
   void _initializeViewer() {
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(onPageFinished: (_) => _loadXml()),
-      );
+    _controller =
+        WebViewController()
+          ..setJavaScriptMode(JavaScriptMode.unrestricted)
+          ..setNavigationDelegate(
+            NavigationDelegate(onPageFinished: (_) => _loadXml()),
+          );
     _loadViewerHtml();
   }
 
   Future<void> _loadViewerHtml() async {
     final html = await rootBundle.loadString('assets/viewer.html');
-    final encodedHtml = Uri.dataFromString(
-      html,
-      mimeType: 'text/html',
-      encoding: Encoding.getByName('utf-8'),
-    ).toString();
+    final encodedHtml =
+        Uri.dataFromString(
+          html,
+          mimeType: 'text/html',
+          encoding: Encoding.getByName('utf-8'),
+        ).toString();
     _controller.loadRequest(Uri.parse(encodedHtml));
   }
 
@@ -108,19 +110,22 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
             Column(
               children: [
                 _buildButton(Icons.remove_red_eye_outlined, "View", () async {
-                  await _controller.runJavaScript(
-                    "document.body.innerHTML = '';",
-                  );
-                  await Future.delayed(Duration(milliseconds: 100));
+                  if (_xmlSize == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("❗ No XML content available.")),
+                    );
+                    return;
+                  }
 
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => ViewSheetScreen(
-                        keySignature: widget.transposedKey,
-                        xmlContent: widget.transposedXml,
-                        fileName: widget.songName ?? "Untitled Song",
-                      ),
+                      builder:
+                          (_) => ViewSheetScreen(
+                            keySignature: widget.transposedKey,
+                            xmlContent: widget.transposedXml,
+                            fileName: widget.songName ?? "Untitled Song",
+                          ),
                     ),
                   );
                 }),
@@ -223,54 +228,55 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
 
     showDialog(
       context: scaffoldContext,
-      builder: (dialogContext) => AlertDialog(
-        title: Text("Name your sheet"),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(hintText: "e.g. My Transposed Song"),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () async {
-              final name = controller.text.trim();
-              Navigator.pop(dialogContext);
+      builder:
+          (dialogContext) => AlertDialog(
+            title: Text("Name your sheet"),
+            content: TextField(
+              controller: controller,
+              decoration: InputDecoration(hintText: "e.g. My Transposed Song"),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () async {
+                  final name = controller.text.trim();
+                  Navigator.pop(dialogContext);
 
-              if (name.isEmpty) {
-                if (mounted) {
-                  ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                    SnackBar(content: Text("❗ Please enter a name.")),
+                  if (name.isEmpty) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                        SnackBar(content: Text("❗ Please enter a name.")),
+                      );
+                    }
+                    return;
+                  }
+
+                  final success = await ApiService.saveSongToDatabase(
+                    name: name,
+                    xml: widget.transposedXml,
+                    originalKey: widget.originalKey,
+                    transposedKey: widget.transposedKey,
                   );
-                }
-                return;
-              }
 
-              final success = await ApiService.saveSongToDatabase(
-                name: name,
-                xml: widget.transposedXml,
-                originalKey: widget.originalKey,
-                transposedKey: widget.transposedKey,
-              );
+                  if (!mounted) return;
 
-              if (!mounted) return;
-
-              ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    success
-                        ? "✅ Saved to library as \"$name\""
-                        : "❌ Failed to save. Try again.",
-                  ),
-                ),
-              );
-            },
-            child: Text("Save"),
+                  ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        success
+                            ? "✅ Saved to library as \"$name\""
+                            : "❌ Failed to save. Try again.",
+                      ),
+                    ),
+                  );
+                },
+                child: Text("Save"),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 

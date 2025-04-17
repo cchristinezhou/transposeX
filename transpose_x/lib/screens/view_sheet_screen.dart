@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../utils/file_export.dart';
 import 'package:share_plus/share_plus.dart';
+import '../services/api_service.dart';
 
 class ViewSheetScreen extends StatefulWidget {
   final String xmlContent;
@@ -77,35 +78,60 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
     );
   }
 
-  void _showRenameDialog() {
-    final controller = TextEditingController(text: _title);
+ void _showRenameDialog() {
+  final controller = TextEditingController(text: _title);
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Rename Your Sheet"),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(hintText: "Enter new title"),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _title = controller.text.trim();
-              });
-              Navigator.pop(context);
-            },
-            child: Text("Save"),
-          ),
-        ],
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text("Rename Your Sheet"),
+      content: TextField(
+        controller: controller,
+        decoration: InputDecoration(hintText: "Enter new title"),
       ),
-    );
-  }
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text("Cancel"),
+        ),
+        TextButton(
+          onPressed: () async {
+            final newName = controller.text.trim();
+            if (newName.isEmpty) return;
+
+            setState(() {
+              _title = newName;
+            });
+            Navigator.pop(context);
+
+            try {
+              // TODO: call your backend to save new name
+              final success = await ApiService.renameSheet(widget.fileName, newName);
+
+              if (!mounted) return;
+              if (success) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("✅ Renamed successfully!")),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("❌ Failed to rename on server.")),
+                );
+              }
+            } catch (e) {
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("❌ Error updating name.")),
+              );
+              print('❌ Rename error: $e');
+            }
+          },
+          child: Text("Save"),
+        ),
+      ],
+    ),
+  );
+}
 
   void _showDownloadOptions() {
     showModalBottomSheet(
