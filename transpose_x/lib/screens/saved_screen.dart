@@ -22,8 +22,6 @@ class _SavedScreenState extends State<SavedScreen> {
   Future<void> fetchSavedSongs() async {
     try {
       final rawSongs = await ApiService.getSavedSongs();
-
-      // Filter and map to only include valid entries
       final songs =
           rawSongs
               .where(
@@ -44,26 +42,27 @@ class _SavedScreenState extends State<SavedScreen> {
                 },
               )
               .toList();
-
-      setState(() {
-        savedSongs = songs;
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          savedSongs = songs;
+          isLoading = false;
+        });
+      }
     } catch (e) {
       print("❌ Failed to load songs: $e");
-      setState(() => isLoading = false);
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
-  void _showRenameDialog(BuildContext context, int index) {
+  void _showRenameDialog(BuildContext parentContext, int index) {
     TextEditingController _controller = TextEditingController(
       text: savedSongs[index]["name"] ?? "Untitled",
     );
 
     showDialog(
-      context: context,
+      context: parentContext,
       builder:
-          (context) => AlertDialog(
+          (dialogContext) => AlertDialog(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
@@ -81,7 +80,7 @@ class _SavedScreenState extends State<SavedScreen> {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.pop(dialogContext),
                 child: Text(
                   "Cancel",
                   style: TextStyle(color: Color.fromARGB(255, 98, 85, 139)),
@@ -92,32 +91,31 @@ class _SavedScreenState extends State<SavedScreen> {
                   final newName = _controller.text.trim();
                   final oldName = savedSongs[index]["name"];
 
-                  if (newName.isEmpty || oldName == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("❗ Please enter a valid name.")),
+                  final scaffoldContext = parentContext; // 👈 Save BEFORE pop
+                  Navigator.pop(dialogContext);
+
+                  if (newName.isNotEmpty && oldName != null) {
+                    final success = await ApiService.renameSheet(
+                      oldName,
+                      newName,
                     );
-                    return;
-                  }
 
-                  Navigator.pop(context); // close dialog first
+                    if (!mounted) return;
 
-                  final success = await ApiService.renameSheet(
-                    oldName,
-                    newName,
-                  );
-
-                  if (success) {
-                    setState(() {
-                      savedSongs[index]["name"] = newName;
-                    });
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("✅ Renamed successfully!")),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("❌ Failed to rename. Try again.")),
-                    );
+                    if (success) {
+                      setState(() {
+                        savedSongs[index]["name"] = newName;
+                      });
+                      _showSuccessSnackBar(
+                        scaffoldContext,
+                        "✅ Renamed successfully!",
+                      );
+                    } else {
+                      _showErrorSnackBar(
+                        scaffoldContext,
+                        "❌ Failed to rename.",
+                      );
+                    }
                   }
                 },
                 child: Text(
@@ -130,10 +128,6 @@ class _SavedScreenState extends State<SavedScreen> {
     );
   }
 
-  void _shareSheetMusic(String songTitle, String key) {
-    Share.share("Check out my sheet music: $songTitle 🎶 in $key.");
-  }
-
   void _showOptionsMenu(BuildContext context, int index) {
     final song = savedSongs[index];
 
@@ -143,7 +137,7 @@ class _SavedScreenState extends State<SavedScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder:
-          (context) => Container(
+          (sheetContext) => Container(
             padding: const EdgeInsets.symmetric(vertical: 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -152,7 +146,7 @@ class _SavedScreenState extends State<SavedScreen> {
                   leading: Icon(Icons.edit, color: Colors.black),
                   title: Text('Rename'),
                   onTap: () {
-                    Navigator.pop(context);
+                    Navigator.pop(sheetContext);
                     _showRenameDialog(context, index);
                   },
                 ),
@@ -160,23 +154,60 @@ class _SavedScreenState extends State<SavedScreen> {
                   leading: Icon(Icons.download, color: Colors.black),
                   title: Text('Download XML'),
                   onTap: () async {
-                    Navigator.pop(context);
+                    final scaffoldContext = context;
+                    Navigator.pop(sheetContext);
                     final file = await saveXmlFile(song["xml"]);
                     await saveToDownloads(file);
-                    _showSuccessSnackBar(context, "Download successful!");
+                    if (mounted)
+                      _showSuccessSnackBar(
+                        scaffoldContext,
+                        "✅ Download successful!",
+                      );
                   },
                 ),
                 ListTile(
                   leading: Icon(Icons.share, color: Colors.black),
                   title: Text('Share XML'),
                   onTap: () {
-                    Navigator.pop(context);
+                    Navigator.pop(sheetContext);
                     shareXmlContent(song["xml"]);
                   },
                 ),
               ],
             ),
           ),
+    );
+  }
+
+  void _showSuccessSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.check_circle_outline, color: Colors.white),
+            SizedBox(width: 12),
+            Text(message),
+          ],
+        ),
+        backgroundColor: Colors.green[600],
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _showErrorSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.error_outline, color: Colors.white),
+            SizedBox(width: 12),
+            Text(message),
+          ],
+        ),
+        backgroundColor: Colors.red[600],
+        duration: Duration(seconds: 2),
+      ),
     );
   }
 
@@ -228,8 +259,7 @@ class _SavedScreenState extends State<SavedScreen> {
                                 ),
                           ),
                         );
-                        // 🛠 After returning from ViewSheetScreen, refetch songs!
-                        fetchSavedSongs();
+                        fetchSavedSongs(); // Refresh after editing
                       },
                       leading: Icon(
                         Icons.description,
@@ -255,22 +285,6 @@ class _SavedScreenState extends State<SavedScreen> {
                   },
                 ),
               ),
-    );
-  }
-
-  void _showSuccessSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle_outline, color: Colors.white),
-            SizedBox(width: 12),
-            Text(message),
-          ],
-        ),
-        backgroundColor: Colors.green[600],
-        duration: Duration(seconds: 2),
-      ),
     );
   }
 }

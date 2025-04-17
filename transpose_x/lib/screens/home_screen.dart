@@ -70,9 +70,7 @@ class HomeScreenContent extends StatelessWidget {
       Navigator.pop(context); // hide loading spinner
 
       if (mergedXml == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("❌ Upload failed or no valid XML found.")),
-        );
+        _showErrorDialog(context, UploadErrorType.xml);
         return;
       }
 
@@ -84,10 +82,53 @@ class HomeScreenContent extends StatelessWidget {
       );
     } catch (e) {
       Navigator.pop(context);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("❌ Error during upload: $e")));
+      _showErrorDialog(context, UploadErrorType.network);
     }
+  }
+
+  void _showErrorDialog(BuildContext context, UploadErrorType type) {
+    String errorMessage;
+    if (type == UploadErrorType.xml) {
+      errorMessage =
+          "The music sheet you uploaded isn’t clear. Please upload another file.";
+    } else {
+      errorMessage =
+          "There seems to be an issue with your network. Please retry.";
+    }
+
+    showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Text(
+              "Uh-oh, upload failed",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            content: Text(errorMessage),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  "Cancel",
+                  style: TextStyle(color: Color.fromARGB(255, 98, 85, 139)),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _pickFilesAndUpload(context);
+                },
+                child: Text(
+                  "Retry",
+                  style: TextStyle(color: Color.fromARGB(255, 98, 85, 139)),
+                ),
+              ),
+            ],
+          ),
+    );
   }
 
   @override
@@ -155,3 +196,5 @@ class HomeScreenContent extends StatelessWidget {
     );
   }
 }
+
+enum UploadErrorType { xml, network }

@@ -183,12 +183,17 @@ class ApiService {
   }
 
   static Future<bool> renameSheet(String oldName, String newName) async {
-    final response = await http.post(
-      Uri.parse('$_baseUrl/rename-sheet'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'oldName': oldName, 'newName': newName}),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/rename-sheet'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'oldName': oldName, 'newName': newName}),
+      );
 
-    return response.statusCode == 200;
+      return response.statusCode == 200;
+    } catch (e) {
+      print('❌ Rename sheet failed: $e');
+      return false; // Gracefully fail
+    }
   }
 }

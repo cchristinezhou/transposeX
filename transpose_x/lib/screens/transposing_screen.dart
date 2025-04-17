@@ -26,6 +26,8 @@ class TransposingScreen extends StatefulWidget {
 }
 
 class _TransposingScreenState extends State<TransposingScreen> {
+  bool _isTransposing = false;
+
   @override
   void initState() {
     super.initState();
@@ -33,9 +35,12 @@ class _TransposingScreenState extends State<TransposingScreen> {
   }
 
   Future<void> _startTransposition() async {
+    if (!mounted) return;
+
+    setState(() => _isTransposing = true);
+
     try {
       final dir = await getTemporaryDirectory();
-
       final outputFilePath = '${dir.path}/transposed.xml';
 
       final interval = _calculateInterval(
@@ -43,36 +48,72 @@ class _TransposingScreenState extends State<TransposingScreen> {
         widget.transposedKey,
       );
 
-      // Call backend transpose API
       final result = await ApiService.transposeSong(
         xml: widget.xmlContent,
         interval: interval,
       );
-
-      final transposedXml = result; // Already the XML string
 
       if (!mounted) return;
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder:
-              (_) => TransposeResultScreen(
-                transposedXml: transposedXml,
-                originalKey: widget.originalKey,
-                transposedKey: widget.transposedKey,
-                songName: widget.songName,
-              ),
+          builder: (_) => TransposeResultScreen(
+            transposedXml: result,
+            originalKey: widget.originalKey,
+            transposedKey: widget.transposedKey,
+            songName: widget.songName,
+          ),
         ),
       );
     } catch (e) {
       print("❌ Transposition failed: $e");
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Failed to transpose song")),
-      );
-      Navigator.pop(context);
+      _showErrorDialog(e);
+    } finally {
+      if (mounted) {
+        setState(() => _isTransposing = false);
+      }
     }
+  }
+
+  void _showErrorDialog(dynamic error) {
+    String title = "Uh-oh, transposition failed!";
+    String message = "Looks like we hit a wrong note. Try again or double-check your file.";
+
+    if (error.toString().contains('SocketException')) {
+      title = "Uh-oh! We couldn’t process your request.";
+      message = "There was an issue sending your request. Check your internet connection and try again.";
+    } else if (error.toString().contains('500') || error.toString().contains('Internal Server Error')) {
+      title = "Oops! Something went wrong on our end.";
+      message = "We couldn’t complete the transposition due to a system error. Please try again later.";
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              Navigator.pop(context); // Go back to previous screen
+            },
+            child: const Text("Cancel", style: TextStyle(color: Color.fromARGB(255, 98, 85, 139))),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              _startTransposition();   // Retry
+            },
+            child: const Text("Retry", style: TextStyle(color: Color.fromARGB(255, 98, 85, 139))),
+          ),
+        ],
+      ),
+    );
   }
 
   int _calculateInterval(String originalKey, String transposedKey) {
@@ -91,14 +132,8 @@ class _TransposingScreenState extends State<TransposingScreen> {
       "Bb": 10,
       "B": 11,
     };
-    int start =
-        keyMap[originalKey.replaceAll(' major', '').replaceAll(' minor', '')] ??
-        0;
-    int end =
-        keyMap[transposedKey
-            .replaceAll(' major', '')
-            .replaceAll(' minor', '')] ??
-        0;
+    int start = keyMap[originalKey.replaceAll(' major', '').replaceAll(' minor', '')] ?? 0;
+    int end = keyMap[transposedKey.replaceAll(' major', '').replaceAll(' minor', '')] ?? 0;
     return end - start;
   }
 
@@ -124,12 +159,9 @@ class _TransposingScreenState extends State<TransposingScreen> {
             ),
             const SizedBox(height: 32),
             OutlinedButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: _isTransposing ? null : () => Navigator.pop(context),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               child: const Text("Cancel"),
             ),
