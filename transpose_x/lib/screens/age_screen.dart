@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'home_screen.dart';
+import 'saved_screen.dart';
+
 class AgeScreen extends StatefulWidget {
   @override
   _AgeScreenState createState() => _AgeScreenState();
 }
 
 class _AgeScreenState extends State<AgeScreen> {
-  int? _selectedAge = 20; // Default selected age is 20
+  int? _selectedAge = 20; // Default selected age
 
   @override
   void initState() {
@@ -30,6 +33,12 @@ class _AgeScreenState extends State<AgeScreen> {
   }
 
   @override
+  void dispose() {
+    _saveAgeToCache();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -39,8 +48,7 @@ class _AgeScreenState extends State<AgeScreen> {
         foregroundColor: Colors.black,
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
-          onPressed: () async {
-            await _saveAgeToCache(); // Save selected age
+          onPressed: () {
             Navigator.pop(context);
           },
         ),
@@ -106,13 +114,28 @@ class _AgeScreenState extends State<AgeScreen> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 2,
-        items: [
+        items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: "Saved"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
         selectedItemColor: Colors.purple,
         unselectedItemColor: Colors.grey,
+        onTap: (index) async {
+          await _saveAgeToCache(); 
+          if (index == 0) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => HomeScreen()),
+            );
+          } else if (index == 1) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => SavedScreen()),
+            );
+          }
+        
+        },
       ),
     );
   }

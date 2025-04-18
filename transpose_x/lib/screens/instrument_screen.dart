@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'home_screen.dart';
+import 'saved_screen.dart';
+
 class InstrumentScreen extends StatefulWidget {
   @override
   _InstrumentScreenState createState() => _InstrumentScreenState();
 }
 
 class _InstrumentScreenState extends State<InstrumentScreen> {
-  TextEditingController _instrumentController = TextEditingController();
+  final TextEditingController _instrumentController = TextEditingController();
   List<String> _instruments = [];
 
   @override
@@ -29,13 +32,13 @@ class _InstrumentScreenState extends State<InstrumentScreen> {
   }
 
   void _addInstrument() {
-    String instrument = _instrumentController.text.trim();
+    final instrument = _instrumentController.text.trim();
     if (instrument.isNotEmpty) {
       setState(() {
         _instruments.add(instrument);
         _instrumentController.clear();
       });
-      _saveInstrumentsToCache(); // Save after adding
+      _saveInstrumentsToCache();
     }
   }
 
@@ -43,7 +46,14 @@ class _InstrumentScreenState extends State<InstrumentScreen> {
     setState(() {
       _instruments.removeAt(index);
     });
-    _saveInstrumentsToCache(); // Save after deleting
+    _saveInstrumentsToCache();
+  }
+
+  @override
+  void dispose() {
+    _saveInstrumentsToCache();
+    _instrumentController.dispose();
+    super.dispose();
   }
 
   @override
@@ -57,7 +67,7 @@ class _InstrumentScreenState extends State<InstrumentScreen> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pop(context); // No need to save here; already saved on add/delete
+            Navigator.pop(context);
           },
         ),
         title: Text(
@@ -71,10 +81,7 @@ class _InstrumentScreenState extends State<InstrumentScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              "Instrument",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
+            Text("Instrument", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
             SizedBox(height: 5),
             TextField(
               controller: _instrumentController,
@@ -130,13 +137,27 @@ class _InstrumentScreenState extends State<InstrumentScreen> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 2,
-        items: [
+        items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: "Saved"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
         selectedItemColor: Color.fromARGB(255, 98, 85, 139),
         unselectedItemColor: Colors.grey,
+        onTap: (index) async {
+          await _saveInstrumentsToCache();
+          if (index == 0) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => HomeScreen()),
+            );
+          } else if (index == 1) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => SavedScreen()),
+            );
+          }
+        },
       ),
     );
   }
