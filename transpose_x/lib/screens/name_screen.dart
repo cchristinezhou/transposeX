@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'home_screen.dart';
+import 'saved_screen.dart';
+
 class NameScreen extends StatefulWidget {
   @override
   _NameScreenState createState() => _NameScreenState();
 }
 
 class _NameScreenState extends State<NameScreen> {
-  TextEditingController _firstNameController = TextEditingController();
-  TextEditingController _middleNameController = TextEditingController();
-  TextEditingController _lastNameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _middleNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadCachedNames(); // Load saved values when screen starts
+    _loadCachedNames();
   }
 
   Future<void> _loadCachedNames() async {
@@ -35,6 +38,7 @@ class _NameScreenState extends State<NameScreen> {
 
   @override
   void dispose() {
+    _saveNamesToCache();
     _firstNameController.dispose();
     _middleNameController.dispose();
     _lastNameController.dispose();
@@ -51,8 +55,7 @@ class _NameScreenState extends State<NameScreen> {
         foregroundColor: Colors.black,
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
-          onPressed: () async {
-            await _saveNamesToCache(); // Save when user taps back
+          onPressed: () {
             Navigator.pop(context);
           },
         ),
@@ -75,13 +78,27 @@ class _NameScreenState extends State<NameScreen> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 2,
-        items: [
+        items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: "Saved"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
         selectedItemColor: Color.fromARGB(255, 98, 85, 139),
         unselectedItemColor: Colors.grey,
+        onTap: (index) {
+          _saveNamesToCache();
+          if (index == 0) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => HomeScreen()),
+            );
+          } else if (index == 1) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => SavedScreen()),
+            );
+          }
+        },
       ),
     );
   }
@@ -92,10 +109,7 @@ class _NameScreenState extends State<NameScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-          ),
+          Text(label, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
           SizedBox(height: 5),
           TextField(
             controller: controller,
