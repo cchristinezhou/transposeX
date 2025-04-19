@@ -96,6 +96,13 @@ class _FakeWebViewWidget extends PlatformWebViewWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox(); // Simulates empty WebView
+    // ✅ Give it height to prevent Column layout from failing
+    return Container(
+      height: 1600,
+      width: double.infinity,
+      color: const Color(0xFFE0E0E0),
+      alignment: Alignment.center,
+      child: const Text('🔍 Fake WebView'),
+    );
   }
 }

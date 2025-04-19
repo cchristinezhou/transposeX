@@ -31,13 +31,13 @@
             <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
-            <td class="headerCovTableEntry">26</td>
-            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryLo">28.0&nbsp;%</td>
+            <td class="headerCovTableEntry">25</td>
+            <td class="headerCovTableEntry">7</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-04-18 06:37:03</td>
+            <td class="headerValue">2025-04-19 16:39:24</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">-</td>
@@ -66,60 +66,84 @@
 <span id="L4"><span class="lineNum">       4</span>              : import 'package:share_plus/share_plus.dart';</span>
 <span id="L5"><span class="lineNum">       5</span>              : import 'package:permission_handler/permission_handler.dart';</span>
 <span id="L6"><span class="lineNum">       6</span>              : </span>
-<span id="L7"><span class="lineNum">       7</span>              : const String _baseUrl = &quot;http://10.0.0.246:3000&quot;; // Local backend address</span>
+<span id="L7"><span class="lineNum">       7</span>              : const String _baseUrl = 'http://10.0.0.134:3000'; // Local backend address</span>
 <span id="L8"><span class="lineNum">       8</span>              : </span>
-<span id="L9"><span class="lineNum">       9</span>              : /// Save XML to file</span>
-<span id="L10"><span class="lineNum">      10</span> <span class="tlaUNC">           0 : Future&lt;File&gt; saveXmlFile(String xmlContent, [Directory? directory]) async {</span></span>
-<span id="L11"><span class="lineNum">      11</span> <span class="tlaUNC">           0 :   directory ??= await getTemporaryDirectory();</span></span>
-<span id="L12"><span class="lineNum">      12</span> <span class="tlaUNC">           0 :   final file = File('${directory.path}/transposed_sheet.xml');</span></span>
-<span id="L13"><span class="lineNum">      13</span> <span class="tlaUNC">           0 :   await file.writeAsString(xmlContent);</span></span>
-<span id="L14"><span class="lineNum">      14</span>              :   return file;</span>
-<span id="L15"><span class="lineNum">      15</span>              : }</span>
-<span id="L16"><span class="lineNum">      16</span>              : </span>
-<span id="L17"><span class="lineNum">      17</span>              : /// Share XML (with optional context to show Snackbar)</span>
-<span id="L18"><span class="lineNum">      18</span> <span class="tlaUNC">           0 : Future&lt;void&gt; shareXmlContent(String xmlContent, {BuildContext? context}) async {</span></span>
-<span id="L19"><span class="lineNum">      19</span> <span class="tlaUNC">           0 :   final file = await saveXmlFile(xmlContent);</span></span>
-<span id="L20"><span class="lineNum">      20</span> <span class="tlaUNC">           0 :   await Share.shareXFiles(</span></span>
-<span id="L21"><span class="lineNum">      21</span> <span class="tlaUNC">           0 :     [XFile(file.path)],</span></span>
-<span id="L22"><span class="lineNum">      22</span>              :     text: 'Check out my transposed sheet music!',</span>
-<span id="L23"><span class="lineNum">      23</span>              :   );</span>
-<span id="L24"><span class="lineNum">      24</span>              : </span>
-<span id="L25"><span class="lineNum">      25</span> <span class="tlaUNC">           0 :   if (context != null &amp;&amp; context.mounted) {</span></span>
-<span id="L26"><span class="lineNum">      26</span> <span class="tlaUNC">           0 :     ScaffoldMessenger.of(context).showSnackBar(</span></span>
-<span id="L27"><span class="lineNum">      27</span> <span class="tlaUNC">           0 :       SnackBar(</span></span>
-<span id="L28"><span class="lineNum">      28</span> <span class="tlaUNC">           0 :         content: Row(</span></span>
-<span id="L29"><span class="lineNum">      29</span>              :           children: const [</span>
-<span id="L30"><span class="lineNum">      30</span>              :             Icon(Icons.check_circle_outline, color: Colors.white),</span>
-<span id="L31"><span class="lineNum">      31</span>              :             SizedBox(width: 12),</span>
-<span id="L32"><span class="lineNum">      32</span>              :             Text(&quot;Share Successful!&quot;),</span>
-<span id="L33"><span class="lineNum">      33</span>              :           ],</span>
-<span id="L34"><span class="lineNum">      34</span>              :         ),</span>
-<span id="L35"><span class="lineNum">      35</span> <span class="tlaUNC">           0 :         backgroundColor: Colors.green[600],</span></span>
-<span id="L36"><span class="lineNum">      36</span> <span class="tlaUNC">           0 :         duration: Duration(seconds: 2),</span></span>
-<span id="L37"><span class="lineNum">      37</span>              :       ),</span>
-<span id="L38"><span class="lineNum">      38</span>              :     );</span>
-<span id="L39"><span class="lineNum">      39</span>              :   }</span>
-<span id="L40"><span class="lineNum">      40</span>              : }</span>
-<span id="L41"><span class="lineNum">      41</span>              : </span>
-<span id="L42"><span class="lineNum">      42</span>              : /// Save to Downloads folder</span>
-<span id="L43"><span class="lineNum">      43</span> <span class="tlaUNC">           0 : Future&lt;void&gt; saveToDownloads(File file) async {</span></span>
-<span id="L44"><span class="lineNum">      44</span> <span class="tlaUNC">           0 :   if (Platform.isAndroid) {</span></span>
-<span id="L45"><span class="lineNum">      45</span> <span class="tlaUNC">           0 :     final status = await Permission.storage.request();</span></span>
-<span id="L46"><span class="lineNum">      46</span> <span class="tlaUNC">           0 :     if (status.isGranted) {</span></span>
-<span id="L47"><span class="lineNum">      47</span> <span class="tlaUNC">           0 :       final downloads = Directory('/storage/emulated/0/Download');</span></span>
-<span id="L48"><span class="lineNum">      48</span> <span class="tlaUNC">           0 :       final fileName = file.path.split('/').last;</span></span>
-<span id="L49"><span class="lineNum">      49</span> <span class="tlaUNC">           0 :       await file.copy('${downloads.path}/$fileName');</span></span>
-<span id="L50"><span class="lineNum">      50</span> <span class="tlaUNC">           0 :       print('✅ Saved to Downloads');</span></span>
-<span id="L51"><span class="lineNum">      51</span>              :     } else {</span>
-<span id="L52"><span class="lineNum">      52</span> <span class="tlaUNC">           0 :       print('❌ Storage permission denied');</span></span>
-<span id="L53"><span class="lineNum">      53</span>              :     }</span>
-<span id="L54"><span class="lineNum">      54</span> <span class="tlaUNC">           0 :   } else if (Platform.isIOS) {</span></span>
-<span id="L55"><span class="lineNum">      55</span> <span class="tlaUNC">           0 :     await Share.shareXFiles(</span></span>
-<span id="L56"><span class="lineNum">      56</span> <span class="tlaUNC">           0 :       [XFile(file.path)],</span></span>
-<span id="L57"><span class="lineNum">      57</span>              :       text: 'Here is your exported file!',</span>
-<span id="L58"><span class="lineNum">      58</span>              :     );</span>
-<span id="L59"><span class="lineNum">      59</span>              :   }</span>
-<span id="L60"><span class="lineNum">      60</span>              : }</span>
+<span id="L9"><span class="lineNum">       9</span>              : /// Saves XML content to a temporary file.</span>
+<span id="L10"><span class="lineNum">      10</span>              : ///</span>
+<span id="L11"><span class="lineNum">      11</span>              : /// If [directory] is provided, saves the file inside that directory.</span>
+<span id="L12"><span class="lineNum">      12</span>              : /// Otherwise, defaults to the device's temporary directory.</span>
+<span id="L13"><span class="lineNum">      13</span>              : ///</span>
+<span id="L14"><span class="lineNum">      14</span>              : /// Returns the saved [File] object.</span>
+<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">           1 : Future&lt;File&gt; saveXmlFile(String xmlContent, [Directory? directory]) async {</span></span>
+<span id="L16"><span class="lineNum">      16</span> <span class="tlaGNC">           1 :   directory ??= await getTemporaryDirectory();</span></span>
+<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC">           3 :   final file = File('${directory.path}/transposed_sheet.xml');</span></span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">           1 :   await file.writeAsString(xmlContent);</span></span>
+<span id="L19"><span class="lineNum">      19</span>              :   return file;</span>
+<span id="L20"><span class="lineNum">      20</span>              : }</span>
+<span id="L21"><span class="lineNum">      21</span>              : </span>
+<span id="L22"><span class="lineNum">      22</span>              : /// Shares XML content using the native sharing interface.</span>
+<span id="L23"><span class="lineNum">      23</span>              : ///</span>
+<span id="L24"><span class="lineNum">      24</span>              : /// If a [context] is provided, a success [SnackBar] will be displayed</span>
+<span id="L25"><span class="lineNum">      25</span>              : /// after sharing.</span>
+<span id="L26"><span class="lineNum">      26</span>              : ///</span>
+<span id="L27"><span class="lineNum">      27</span>              : /// Example:</span>
+<span id="L28"><span class="lineNum">      28</span>              : /// ```dart</span>
+<span id="L29"><span class="lineNum">      29</span>              : /// await shareXmlContent(myXmlString, context: context);</span>
+<span id="L30"><span class="lineNum">      30</span>              : /// ```</span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaUNC">           0 : Future&lt;void&gt; shareXmlContent(String xmlContent, {BuildContext? context}) async {</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaUNC">           0 :   final file = await saveXmlFile(xmlContent);</span></span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaUNC">           0 :   await Share.shareXFiles(</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaUNC">           0 :     [XFile(file.path)],</span></span>
+<span id="L35"><span class="lineNum">      35</span>              :     text: 'Check out my transposed sheet music!',</span>
+<span id="L36"><span class="lineNum">      36</span>              :   );</span>
+<span id="L37"><span class="lineNum">      37</span>              : </span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaUNC">           0 :   if (context != null &amp;&amp; context.mounted) {</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaUNC">           0 :     ScaffoldMessenger.of(context).showSnackBar(</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaUNC">           0 :       SnackBar(</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaUNC">           0 :         content: Row(</span></span>
+<span id="L42"><span class="lineNum">      42</span>              :           children: const [</span>
+<span id="L43"><span class="lineNum">      43</span>              :             Icon(Icons.check_circle_outline, color: Colors.white),</span>
+<span id="L44"><span class="lineNum">      44</span>              :             SizedBox(width: 12),</span>
+<span id="L45"><span class="lineNum">      45</span>              :             Text(&quot;Share Successful!&quot;),</span>
+<span id="L46"><span class="lineNum">      46</span>              :           ],</span>
+<span id="L47"><span class="lineNum">      47</span>              :         ),</span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaUNC">           0 :         backgroundColor: Colors.green[600],</span></span>
+<span id="L49"><span class="lineNum">      49</span>              :         duration: const Duration(seconds: 2),</span>
+<span id="L50"><span class="lineNum">      50</span>              :       ),</span>
+<span id="L51"><span class="lineNum">      51</span>              :     );</span>
+<span id="L52"><span class="lineNum">      52</span>              :   }</span>
+<span id="L53"><span class="lineNum">      53</span>              : }</span>
+<span id="L54"><span class="lineNum">      54</span>              : </span>
+<span id="L55"><span class="lineNum">      55</span>              : /// Saves a [File] to the user's Downloads folder.</span>
+<span id="L56"><span class="lineNum">      56</span>              : ///</span>
+<span id="L57"><span class="lineNum">      57</span>              : /// - On **Android**, manually copies the file to `/storage/emulated/0/Download/`.</span>
+<span id="L58"><span class="lineNum">      58</span>              : /// - On **iOS**, opens the share sheet instead (since there's no public Downloads folder).</span>
+<span id="L59"><span class="lineNum">      59</span>              : ///</span>
+<span id="L60"><span class="lineNum">      60</span>              : /// Requests storage permission on Android if necessary.</span>
+<span id="L61"><span class="lineNum">      61</span>              : ///</span>
+<span id="L62"><span class="lineNum">      62</span>              : /// Example:</span>
+<span id="L63"><span class="lineNum">      63</span>              : /// ```dart</span>
+<span id="L64"><span class="lineNum">      64</span>              : /// final file = await saveXmlFile(xmlContent);</span>
+<span id="L65"><span class="lineNum">      65</span>              : /// await saveToDownloads(file);</span>
+<span id="L66"><span class="lineNum">      66</span>              : /// ```</span>
+<span id="L67"><span class="lineNum">      67</span> <span class="tlaGNC">           1 : Future&lt;void&gt; saveToDownloads(File file) async {</span></span>
+<span id="L68"><span class="lineNum">      68</span> <span class="tlaGNC">           1 :   if (Platform.isAndroid) {</span></span>
+<span id="L69"><span class="lineNum">      69</span> <span class="tlaUNC">           0 :     final status = await Permission.storage.request();</span></span>
+<span id="L70"><span class="lineNum">      70</span> <span class="tlaUNC">           0 :     if (status.isGranted) {</span></span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaUNC">           0 :       final downloads = Directory('/storage/emulated/0/Download');</span></span>
+<span id="L72"><span class="lineNum">      72</span> <span class="tlaUNC">           0 :       final fileName = file.path.split('/').last;</span></span>
+<span id="L73"><span class="lineNum">      73</span> <span class="tlaUNC">           0 :       await file.copy('${downloads.path}/$fileName');</span></span>
+<span id="L74"><span class="lineNum">      74</span> <span class="tlaUNC">           0 :       print('✅ Saved to Downloads');</span></span>
+<span id="L75"><span class="lineNum">      75</span>              :     } else {</span>
+<span id="L76"><span class="lineNum">      76</span> <span class="tlaUNC">           0 :       print('❌ Storage permission denied');</span></span>
+<span id="L77"><span class="lineNum">      77</span>              :     }</span>
+<span id="L78"><span class="lineNum">      78</span> <span class="tlaGNC">           1 :   } else if (Platform.isIOS) {</span></span>
+<span id="L79"><span class="lineNum">      79</span> <span class="tlaUNC">           0 :     await Share.shareXFiles(</span></span>
+<span id="L80"><span class="lineNum">      80</span> <span class="tlaUNC">           0 :       [XFile(file.path)],</span></span>
+<span id="L81"><span class="lineNum">      81</span>              :       text: 'Here is your exported file!',</span>
+<span id="L82"><span class="lineNum">      82</span>              :     );</span>
+<span id="L83"><span class="lineNum">      83</span>              :   }</span>
+<span id="L84"><span class="lineNum">      84</span>              : }</span>
         </pre>
               </td>
             </tr>

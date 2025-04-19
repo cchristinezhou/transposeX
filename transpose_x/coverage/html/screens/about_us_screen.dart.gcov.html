@@ -32,12 +32,12 @@
             <td></td>
             <td class="headerItem">Lines:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
-            <td class="headerCovTableEntry">8</td>
-            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntry">21</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-04-18 06:37:03</td>
+            <td class="headerValue">2025-04-19 16:42:38</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">-</td>
@@ -61,61 +61,98 @@
 <pre class="sourceHeading">            Line data    Source code</pre>
 <pre class="source">
 <span id="L1"><span class="lineNum">       1</span>              : import 'package:flutter/material.dart';</span>
-<span id="L2"><span class="lineNum">       2</span>              : </span>
-<span id="L3"><span class="lineNum">       3</span>              : class AboutUsScreen extends StatelessWidget {</span>
-<span id="L4"><span class="lineNum">       4</span> <span class="tlaGNC">           1 :   const AboutUsScreen({super.key});</span></span>
-<span id="L5"><span class="lineNum">       5</span>              : </span>
-<span id="L6"><span class="lineNum">       6</span> <span class="tlaGNC">           1 :   @override</span></span>
-<span id="L7"><span class="lineNum">       7</span>              :   Widget build(BuildContext context) {</span>
-<span id="L8"><span class="lineNum">       8</span> <span class="tlaGNC">           1 :     return Scaffold(</span></span>
-<span id="L9"><span class="lineNum">       9</span> <span class="tlaGNC">           1 :       appBar: AppBar(</span></span>
-<span id="L10"><span class="lineNum">      10</span> <span class="tlaGNC">           1 :         leading: BackButton(color: Colors.black),</span></span>
-<span id="L11"><span class="lineNum">      11</span>              :         title: const Text(&quot;About Us&quot;, style: TextStyle(color: Colors.black)),</span>
-<span id="L12"><span class="lineNum">      12</span>              :         backgroundColor: Colors.white,</span>
-<span id="L13"><span class="lineNum">      13</span>              :         elevation: 0,</span>
-<span id="L14"><span class="lineNum">      14</span>              :       ),</span>
-<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">           1 :       body: Padding(</span></span>
-<span id="L16"><span class="lineNum">      16</span>              :         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12),</span>
-<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC">           1 :         child: SingleChildScrollView(</span></span>
-<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">           1 :           child: Column(</span></span>
-<span id="L19"><span class="lineNum">      19</span>              :             crossAxisAlignment: CrossAxisAlignment.start,</span>
-<span id="L20"><span class="lineNum">      20</span>              :             children: const [</span>
-<span id="L21"><span class="lineNum">      21</span>              :               SizedBox(height: 16),</span>
-<span id="L22"><span class="lineNum">      22</span>              :               Text(</span>
-<span id="L23"><span class="lineNum">      23</span>              :                 &quot;Empowering Music Learners&quot;,</span>
-<span id="L24"><span class="lineNum">      24</span>              :                 style: TextStyle(</span>
-<span id="L25"><span class="lineNum">      25</span>              :                   fontSize: 24,</span>
-<span id="L26"><span class="lineNum">      26</span>              :                   fontWeight: FontWeight.bold,</span>
-<span id="L27"><span class="lineNum">      27</span>              :                   color: Color.fromARGB(255, 98, 85, 139),</span>
-<span id="L28"><span class="lineNum">      28</span>              :                 ),</span>
-<span id="L29"><span class="lineNum">      29</span>              :               ),</span>
-<span id="L30"><span class="lineNum">      30</span>              :               SizedBox(height: 16),</span>
-<span id="L31"><span class="lineNum">      31</span>              :               Text(</span>
-<span id="L32"><span class="lineNum">      32</span>              :                 &quot;Transpose X was created to make sheet music more accessible, especially for beginners and self-taught musicians. We know the struggle of encountering a piece in an unfamiliar key — so we built a tool to make transposition simple, fast, and friendly.&quot;,</span>
-<span id="L33"><span class="lineNum">      33</span>              :                 style: TextStyle(fontSize: 16, height: 1.5),</span>
-<span id="L34"><span class="lineNum">      34</span>              :               ),</span>
-<span id="L35"><span class="lineNum">      35</span>              :               SizedBox(height: 16),</span>
-<span id="L36"><span class="lineNum">      36</span>              :               Text(</span>
-<span id="L37"><span class="lineNum">      37</span>              :                 &quot;Whether you're a music teacher preparing materials or a student learning to play, Transpose X helps you focus on what matters: making music.&quot;,</span>
-<span id="L38"><span class="lineNum">      38</span>              :                 style: TextStyle(fontSize: 16, height: 1.5),</span>
-<span id="L39"><span class="lineNum">      39</span>              :               ),</span>
-<span id="L40"><span class="lineNum">      40</span>              :               SizedBox(height: 16),</span>
-<span id="L41"><span class="lineNum">      41</span>              :               Text(</span>
-<span id="L42"><span class="lineNum">      42</span>              :                 &quot;We're a small team of music lovers, technologists, and designers committed to building tools that remove friction and foster creativity.&quot;,</span>
-<span id="L43"><span class="lineNum">      43</span>              :                 style: TextStyle(fontSize: 16, height: 1.5),</span>
-<span id="L44"><span class="lineNum">      44</span>              :               ),</span>
-<span id="L45"><span class="lineNum">      45</span>              :               SizedBox(height: 24),</span>
-<span id="L46"><span class="lineNum">      46</span>              :               Text(</span>
-<span id="L47"><span class="lineNum">      47</span>              :                 &quot;Thank you for being part of our journey. 🎼&quot;,</span>
-<span id="L48"><span class="lineNum">      48</span>              :                 style: TextStyle(fontSize: 16, height: 1.5),</span>
-<span id="L49"><span class="lineNum">      49</span>              :               ),</span>
-<span id="L50"><span class="lineNum">      50</span>              :             ],</span>
-<span id="L51"><span class="lineNum">      51</span>              :           ),</span>
-<span id="L52"><span class="lineNum">      52</span>              :         ),</span>
-<span id="L53"><span class="lineNum">      53</span>              :       ),</span>
-<span id="L54"><span class="lineNum">      54</span>              :     );</span>
-<span id="L55"><span class="lineNum">      55</span>              :   }</span>
-<span id="L56"><span class="lineNum">      56</span>              : }</span>
+<span id="L2"><span class="lineNum">       2</span>              : import '../theme/app_colors.dart';</span>
+<span id="L3"><span class="lineNum">       3</span>              : import '../theme/app_text_styles.dart';</span>
+<span id="L4"><span class="lineNum">       4</span>              : </span>
+<span id="L5"><span class="lineNum">       5</span>              : /// A simple screen introducing the &quot;Transpose X&quot; app and its mission.</span>
+<span id="L6"><span class="lineNum">       6</span>              : ///</span>
+<span id="L7"><span class="lineNum">       7</span>              : /// Displays a brief description of the app's purpose and a message of gratitude.</span>
+<span id="L8"><span class="lineNum">       8</span>              : class AboutUsScreen extends StatelessWidget {</span>
+<span id="L9"><span class="lineNum">       9</span>              :   /// Creates an instance of [AboutUsScreen].</span>
+<span id="L10"><span class="lineNum">      10</span> <span class="tlaGNC">          17 :   const AboutUsScreen({super.key});</span></span>
+<span id="L11"><span class="lineNum">      11</span>              : </span>
+<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC">           1 :   @override</span></span>
+<span id="L13"><span class="lineNum">      13</span>              :   Widget build(BuildContext context) {</span>
+<span id="L14"><span class="lineNum">      14</span> <span class="tlaGNC">           1 :     return Scaffold(</span></span>
+<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">           1 :       appBar: AppBar(</span></span>
+<span id="L16"><span class="lineNum">      16</span>              :         /// Back button leading out of the About Us page.</span>
+<span id="L17"><span class="lineNum">      17</span>              :         leading: const Tooltip(</span>
+<span id="L18"><span class="lineNum">      18</span>              :           message: &quot;Back to previous screen&quot;,</span>
+<span id="L19"><span class="lineNum">      19</span>              :           child: BackButton(</span>
+<span id="L20"><span class="lineNum">      20</span>              :             color: AppColors.accent,</span>
+<span id="L21"><span class="lineNum">      21</span>              :           ),</span>
+<span id="L22"><span class="lineNum">      22</span>              :         ),</span>
+<span id="L23"><span class="lineNum">      23</span>              : </span>
+<span id="L24"><span class="lineNum">      24</span>              :         /// Title displayed in the AppBar.</span>
+<span id="L25"><span class="lineNum">      25</span>              :         title: const Text(&quot;About Us&quot;, style: AppTextStyles.heading),</span>
+<span id="L26"><span class="lineNum">      26</span>              : </span>
+<span id="L27"><span class="lineNum">      27</span>              :         /// Background color of the AppBar.</span>
+<span id="L28"><span class="lineNum">      28</span>              :         backgroundColor: AppColors.background,</span>
+<span id="L29"><span class="lineNum">      29</span>              : </span>
+<span id="L30"><span class="lineNum">      30</span>              :         /// No shadow under the AppBar.</span>
+<span id="L31"><span class="lineNum">      31</span>              :         elevation: 0,</span>
+<span id="L32"><span class="lineNum">      32</span>              :       ),</span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">           1 :       body: Semantics(</span></span>
+<span id="L34"><span class="lineNum">      34</span>              :         label: &quot;About Us screen&quot;,</span>
+<span id="L35"><span class="lineNum">      35</span>              :         explicitChildNodes: true,</span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">           1 :         child: Padding(</span></span>
+<span id="L37"><span class="lineNum">      37</span>              :           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12),</span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">           1 :           child: SingleChildScrollView(</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">           1 :             child: Column(</span></span>
+<span id="L40"><span class="lineNum">      40</span>              :               crossAxisAlignment: CrossAxisAlignment.start,</span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">           1 :               children: [</span></span>
+<span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC">           1 :                 SizedBox(height: 16),</span></span>
+<span id="L43"><span class="lineNum">      43</span>              : </span>
+<span id="L44"><span class="lineNum">      44</span>              :                 /// Section heading for the mission statement.</span>
+<span id="L45"><span class="lineNum">      45</span> <span class="tlaGNC">           1 :                 Semantics(</span></span>
+<span id="L46"><span class="lineNum">      46</span>              :                   header: true,</span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">           1 :                   child: Text(</span></span>
+<span id="L48"><span class="lineNum">      48</span>              :                     &quot;Empowering Music Learners&quot;,</span>
+<span id="L49"><span class="lineNum">      49</span>              :                     style: AppTextStyles.sectionHeading,</span>
+<span id="L50"><span class="lineNum">      50</span>              :                   ),</span>
+<span id="L51"><span class="lineNum">      51</span>              :                 ),</span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">           1 :                 SizedBox(height: 16),</span></span>
+<span id="L53"><span class="lineNum">      53</span>              : </span>
+<span id="L54"><span class="lineNum">      54</span>              :                 /// Paragraph describing why Transpose X was created.</span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">           1 :                 Text(</span></span>
+<span id="L56"><span class="lineNum">      56</span>              :                   &quot;Transpose X was created to make sheet music more accessible, &quot;</span>
+<span id="L57"><span class="lineNum">      57</span>              :                   &quot;especially for beginners and self-taught musicians. We know the struggle &quot;</span>
+<span id="L58"><span class="lineNum">      58</span>              :                   &quot;of encountering a piece in an unfamiliar key — so we built a tool to make &quot;</span>
+<span id="L59"><span class="lineNum">      59</span>              :                   &quot;transposition simple, fast, and friendly.&quot;,</span>
+<span id="L60"><span class="lineNum">      60</span>              :                   style: AppTextStyles.bodyText,</span>
+<span id="L61"><span class="lineNum">      61</span>              :                 ),</span>
+<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">           1 :                 SizedBox(height: 16),</span></span>
+<span id="L63"><span class="lineNum">      63</span>              : </span>
+<span id="L64"><span class="lineNum">      64</span>              :                 /// Paragraph on who benefits from using the app.</span>
+<span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">           1 :                 Text(</span></span>
+<span id="L66"><span class="lineNum">      66</span>              :                   &quot;Whether you're a music teacher preparing materials or a student learning to play, &quot;</span>
+<span id="L67"><span class="lineNum">      67</span>              :                   &quot;Transpose X helps you focus on what matters: making music.&quot;,</span>
+<span id="L68"><span class="lineNum">      68</span>              :                   style: AppTextStyles.bodyText,</span>
+<span id="L69"><span class="lineNum">      69</span>              :                 ),</span>
+<span id="L70"><span class="lineNum">      70</span> <span class="tlaGNC">           1 :                 SizedBox(height: 16),</span></span>
+<span id="L71"><span class="lineNum">      71</span>              : </span>
+<span id="L72"><span class="lineNum">      72</span>              :                 /// Paragraph about the team behind Transpose X.</span>
+<span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC">           1 :                 Text(</span></span>
+<span id="L74"><span class="lineNum">      74</span>              :                   &quot;We're a small team of music lovers, technologists, and designers committed to &quot;</span>
+<span id="L75"><span class="lineNum">      75</span>              :                   &quot;building tools that remove friction and foster creativity.&quot;,</span>
+<span id="L76"><span class="lineNum">      76</span>              :                   style: AppTextStyles.bodyText,</span>
+<span id="L77"><span class="lineNum">      77</span>              :                 ),</span>
+<span id="L78"><span class="lineNum">      78</span> <span class="tlaGNC">           1 :                 SizedBox(height: 24),</span></span>
+<span id="L79"><span class="lineNum">      79</span>              : </span>
+<span id="L80"><span class="lineNum">      80</span>              :                 /// Closing gratitude message to the users.</span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">           1 :                 Text(</span></span>
+<span id="L82"><span class="lineNum">      82</span>              :                   &quot;Thank you for being part of our journey. 🎼&quot;,</span>
+<span id="L83"><span class="lineNum">      83</span>              :                   style: AppTextStyles.bodyText,</span>
+<span id="L84"><span class="lineNum">      84</span>              :                 ),</span>
+<span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">           1 :                 SizedBox(height: 32),</span></span>
+<span id="L86"><span class="lineNum">      86</span>              :               ],</span>
+<span id="L87"><span class="lineNum">      87</span>              :             ),</span>
+<span id="L88"><span class="lineNum">      88</span>              :           ),</span>
+<span id="L89"><span class="lineNum">      89</span>              :         ),</span>
+<span id="L90"><span class="lineNum">      90</span>              :       ),</span>
+<span id="L91"><span class="lineNum">      91</span>              :     );</span>
+<span id="L92"><span class="lineNum">      92</span>              :   }</span>
+<span id="L93"><span class="lineNum">      93</span>              : }</span>
         </pre>
               </td>
             </tr>

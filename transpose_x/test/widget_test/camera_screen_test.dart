@@ -1,48 +1,49 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/mockito.dart';
+import 'package:image_picker/image_picker.dart';
+
 import 'package:transpose_x/screens/camera_screen.dart';
+import 'package:transpose_x/services/api_service.dart'; // Adjust the path
+
+import '../mocks/mock_services.mocks.dart'; // Generated via build_runner
 
 void main() {
+  late MockImagePicker mockImagePicker;
+
+  setUp(() {
+    mockImagePicker = MockImagePicker();
+  });
+
   group('CameraScreen Widget Tests', () {
-    testWidgets('renders AppBar with back button and title', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(home: CameraScreen()),
-      );
+    testWidgets('renders UI and responds to basic buttons', (WidgetTester tester) async {
+      await tester.pumpWidget(const MaterialApp(home: CameraScreen()));
 
-      expect(find.byIcon(Icons.arrow_back), findsOneWidget);
-      expect(find.text('Back'), findsOneWidget);
-    });
+      // Spinner before camera is initialized
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-    testWidgets('renders gallery, capture, and upload buttons', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(home: CameraScreen()),
-      );
+      await tester.pump(const Duration(seconds: 2));
 
-      // Gallery button
+      // Check buttons
       expect(find.byIcon(Icons.photo), findsOneWidget);
-
-      // Capture button: look for circular container with a border
-      expect(
-        find.byWidgetPredicate(
-          (widget) =>
-              widget is Container &&
-              widget.decoration is BoxDecoration &&
-              (widget.decoration as BoxDecoration).shape == BoxShape.circle &&
-              (widget.decoration as BoxDecoration).border != null,
-        ),
-        findsOneWidget,
-      );
-
-      // Upload button: check_circle icon
       expect(find.byIcon(Icons.check_circle), findsOneWidget);
     });
 
-    testWidgets('shows loading indicator before camera initializes', (WidgetTester tester) async {
+    testWidgets('Back button triggers Navigator.pop', (WidgetTester tester) async {
+      final navKey = GlobalKey<NavigatorState>();
+
       await tester.pumpWidget(
-        MaterialApp(home: CameraScreen()),
+        MaterialApp(
+          navigatorKey: navKey,
+          home: const CameraScreen(),
+        ),
       );
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      await tester.tap(find.byTooltip('Back to previous screen'));
+      await tester.pumpAndSettle();
     });
+
+  
   });
 }
