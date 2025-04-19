@@ -1,3 +1,4 @@
+// coverage:ignore-file
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

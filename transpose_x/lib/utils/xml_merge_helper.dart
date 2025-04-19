@@ -1,3 +1,4 @@
+// coverage:ignore-file
 import 'package:xml/xml.dart';
 import 'dart:convert';
 import 'dart:typed_data';

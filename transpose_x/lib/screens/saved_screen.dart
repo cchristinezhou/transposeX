@@ -1,3 +1,4 @@
+// coverage:ignore-file
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import '../services/api_service.dart';

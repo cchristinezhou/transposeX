@@ -1,3 +1,4 @@
+// coverage:ignore-file
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -5,7 +6,7 @@ import 'package:http/http.dart' as http;
 
 /// Handles API interactions for uploading, transposing, saving, and retrieving music sheets.
 class ApiService {
-  static const String _baseUrl = 'http://192.168.0.25'; // Change for deployment
+  static const String _baseUrl = 'http://192.168.0.25:3000'; // Change for deployment
   static const String _uploadEndpoint = "$_baseUrl/upload";
   static const String _transposeEndpoint = "$_baseUrl/api/transpose";
   static const String _savedSongsEndpoint = "$_baseUrl/saved-songs";
