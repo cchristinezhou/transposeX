@@ -12,10 +12,7 @@ import '../utils/xml_merge_helper.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
-/// A screen that allows users to capture or select images,
-/// upload them for processing, and view the merged sheet music.
 class CameraScreen extends StatefulWidget {
-  /// Creates a [CameraScreen].
   const CameraScreen({super.key});
 
   @override
@@ -23,16 +20,9 @@ class CameraScreen extends StatefulWidget {
 }
 
 class _CameraScreenState extends State<CameraScreen> {
-  /// Controller for managing the device camera.
   CameraController? _cameraController;
-
-  /// List of available device cameras.
   late List<CameraDescription> _cameras;
-
-  /// Whether the camera has been successfully initialized.
   bool _isCameraInitialized = false;
-
-  /// List of captured or selected images.
   List<XFile> _capturedImages = [];
 
   @override
@@ -41,15 +31,18 @@ class _CameraScreenState extends State<CameraScreen> {
     _initializeCamera();
   }
 
-  /// Initializes the device camera.
   Future<void> _initializeCamera() async {
     try {
       _cameras = await availableCameras();
       _cameraController = CameraController(
         _cameras[0],
         ResolutionPreset.medium,
+        imageFormatGroup: ImageFormatGroup.jpeg,
+        enableAudio: false,
       );
       await _cameraController!.initialize();
+      await _cameraController!.setFocusMode(FocusMode.auto);
+
       if (!mounted) return;
       setState(() => _isCameraInitialized = true);
     } catch (e) {
@@ -57,7 +50,6 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
-  /// Captures an image using the device camera.
   Future<void> _captureImage() async {
     if (!_isCameraInitialized || _cameraController == null) return;
     try {
@@ -68,7 +60,6 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
-  /// Allows user to pick multiple images from gallery.
   Future<void> _pickImagesFromGallery() async {
     final picker = ImagePicker();
     final List<XFile>? selectedImages = await picker.pickMultiImage();
@@ -77,7 +68,6 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
-  /// Uploads and merges the selected images into a single MusicXML file.
   Future<void> _uploadAndMerge() async {
     if (_capturedImages.isEmpty) return;
 
@@ -116,7 +106,7 @@ class _CameraScreenState extends State<CameraScreen> {
         }
       }
 
-      Navigator.pop(context); // Hide spinner
+      Navigator.pop(context);
 
       if (parsedDocs.isEmpty) {
         _showWarningDialog();
@@ -137,7 +127,6 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
-  /// Checks if the file is a ZIP archive.
   bool _isZip(Uint8List bytes) {
     return bytes.length >= 4 &&
         bytes[0] == 0x50 &&
@@ -146,34 +135,32 @@ class _CameraScreenState extends State<CameraScreen> {
         (bytes[3] == 0x04 || bytes[3] == 0x06 || bytes[3] == 0x08);
   }
 
-  /// Displays a warning dialog when the upload fails.
   void _showWarningDialog() {
     showDialog(
       context: context,
-      builder:
-          (_) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: const Text("Warning", style: AppTextStyles.heading),
-            content: const Text(
-              "We couldn't recognize your image(s). Make sure your photo is clear, well-lit, and shows the full sheet music. Try again or pick a different image.",
-              style: AppTextStyles.bodyText,
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Cancel", style: AppTextStyles.primaryAction),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _uploadAndMerge();
-                },
-                child: const Text("Retry", style: AppTextStyles.primaryAction),
-              ),
-            ],
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: const Text("Warning", style: AppTextStyles.heading),
+        content: const Text(
+          "We couldn't recognize your image(s). Make sure your photo is clear, well-lit, and shows the full sheet music. Try again or pick a different image.",
+          style: AppTextStyles.bodyText,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel", style: AppTextStyles.primaryAction),
           ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _uploadAndMerge();
+            },
+            child: const Text("Retry", style: AppTextStyles.primaryAction),
+          ),
+        ],
+      ),
     );
   }
 
@@ -203,13 +190,39 @@ class _CameraScreenState extends State<CameraScreen> {
         child: Stack(
           children: [
             Positioned.fill(
-              child:
-                  _isCameraInitialized
-                      ? Semantics(
-                        label: "Camera preview",
-                        child: CameraPreview(_cameraController!),
-                      )
-                      : const Center(child: CircularProgressIndicator()),
+              child: _isCameraInitialized
+                  ? Semantics(
+                      label: "Camera preview",
+                      child: Center(
+                        child: Container(
+                          height: MediaQuery.of(context).size.height * 0.8,
+                          child: GestureDetector(
+                            onTapDown: (details) async {
+                              final renderBox = context.findRenderObject() as RenderBox;
+                              final localPosition = renderBox.globalToLocal(details.globalPosition);
+                              final dx = localPosition.dx / renderBox.size.width;
+                              final dy = localPosition.dy / renderBox.size.height;
+
+                              try {
+                                await _cameraController!.setFocusPoint(Offset(dx, dy));
+                                print('🔍 Focusing at: $dx, $dy');
+                              } catch (e) {
+                                print('⚠️ setFocusPoint failed: $e');
+                              }
+                            },
+                            child: FittedBox(
+                              fit: BoxFit.contain,
+                              child: SizedBox(
+                                width: _cameraController!.value.previewSize!.height,
+                                height: _cameraController!.value.previewSize!.width,
+                                child: CameraPreview(_cameraController!),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  : const Center(child: CircularProgressIndicator()),
             ),
             if (_capturedImages.isNotEmpty)
               Positioned(
