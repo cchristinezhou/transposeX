@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../utils/xml_merge_helper.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 import 'camera_screen.dart';
 import 'profile_screen.dart';
 import 'saved_screen.dart';
@@ -29,14 +31,14 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(color: Colors.white, child: _screens[_selectedIndex]),
+      body: Container(color: AppColors.background, child: _screens[_selectedIndex]),
       bottomNavigationBar: Container(
-        color: Color.fromARGB(255, 243, 237, 246),
+        color: AppColors.offWhite,
         child: BottomNavigationBar(
           currentIndex: _selectedIndex,
-          selectedItemColor: Color.fromARGB(255, 98, 85, 139),
+          selectedItemColor: AppColors.primaryPurple,
           unselectedItemColor: Colors.black54,
-          backgroundColor: Color.fromARGB(255, 243, 237, 246),
+          backgroundColor: AppColors.offWhite,
           onTap: _onItemTapped,
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
@@ -59,13 +61,11 @@ class HomeScreenContent extends StatelessWidget {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => Center(child: CircularProgressIndicator()),
+      builder: (_) => const Center(child: CircularProgressIndicator()),
     );
 
     try {
-      final mergedXml = await XmlMergeHelper.processAndMergeFiles(
-        selectedFiles,
-      );
+      final mergedXml = await XmlMergeHelper.processAndMergeFiles(selectedFiles);
 
       Navigator.pop(context); // hide loading spinner
 
@@ -90,7 +90,7 @@ class HomeScreenContent extends StatelessWidget {
     String errorMessage;
     if (type == UploadErrorType.xml) {
       errorMessage =
-          "The music sheet you uploaded isn’t clear. Please upload another file.";
+          "The files you selected aren’t clear. Please upload a different file.";
     } else {
       errorMessage =
           "There seems to be an issue with your network. Please retry.";
@@ -98,36 +98,30 @@ class HomeScreenContent extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder:
-          (_) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: Text(
-              "Uh-oh, upload failed",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            content: Text(errorMessage),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  "Cancel",
-                  style: TextStyle(color: Color.fromARGB(255, 98, 85, 139)),
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _pickFilesAndUpload(context);
-                },
-                child: Text(
-                  "Retry",
-                  style: TextStyle(color: Color.fromARGB(255, 98, 85, 139)),
-                ),
-              ),
-            ],
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          "Warning",
+          style: AppTextStyles.heading,
+        ),
+        content: Text(
+          errorMessage,
+          style: AppTextStyles.subtitle,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel", style: TextStyle(color: AppColors.primaryPurple)),
           ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _pickFilesAndUpload(context);
+            },
+            child: Text("Retry", style: TextStyle(color: AppColors.primaryPurple)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -135,20 +129,20 @@ class HomeScreenContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 30),
+        padding: const EdgeInsets.symmetric(horizontal: 30),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               "TransposeX",
-              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+              style: AppTextStyles.heading.copyWith(fontSize: 32),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
-              "How to Use Transpose X",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              "How to Use TransposeX",
+              style: AppTextStyles.heading.copyWith(fontSize: 18),
             ),
-            SizedBox(height: 15),
+            const SizedBox(height: 15),
             Text(
               "1. Upload Your Music\n"
               "Snap a photo, upload a file, or import a PDF of your sheet music.\n\n"
@@ -157,38 +151,37 @@ class HomeScreenContent extends StatelessWidget {
               "3. Download & Play\n"
               "Get your transposed sheet music in seconds.",
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14),
+              style: AppTextStyles.subtitle,
             ),
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
             ElevatedButton(
-              onPressed:
-                  () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => CameraScreen()),
-                  ),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => CameraScreen()),
+              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color.fromARGB(255, 98, 85, 139),
-                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 12),
+                backgroundColor: AppColors.primaryPurple,
+                padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
               ),
-              child: Text(
+              child: const Text(
                 "Take a Picture",
-                style: TextStyle(color: Colors.white),
+                style: AppTextStyles.buttonText,
               ),
             ),
-            SizedBox(height: 15),
+            const SizedBox(height: 15),
             ElevatedButton(
               onPressed: () => _pickFilesAndUpload(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color.fromARGB(255, 98, 85, 139),
-                padding: EdgeInsets.symmetric(horizontal: 60, vertical: 12),
+                backgroundColor: AppColors.primaryPurple,
+                padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
               ),
-              child: Text("Upload", style: TextStyle(color: Colors.white)),
+              child: const Text("Upload", style: AppTextStyles.buttonText),
             ),
           ],
         ),

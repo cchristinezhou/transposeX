@@ -1,18 +1,28 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'transpose_result_screen.dart';
-import '../services/api_service.dart';
 import 'package:path_provider/path_provider.dart';
-import 'dart:io';
+import '../services/api_service.dart';
+import 'transpose_result_screen.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 
+/// A screen that processes and displays the transposition of a music sheet.
+///
+/// Handles API communication, error states, and progress display.
 class TransposingScreen extends StatefulWidget {
+  /// Raw XML content of the original sheet music.
   final String xmlContent;
+
+  /// The original key signature.
   final String originalKey;
+
+  /// The desired transposed key signature.
   final String transposedKey;
+
+  /// The name of the song being transposed.
   final String songName;
 
+  /// Creates a [TransposingScreen].
   const TransposingScreen({
     Key? key,
     required this.xmlContent,
@@ -36,7 +46,6 @@ class _TransposingScreenState extends State<TransposingScreen> {
 
   Future<void> _startTransposition() async {
     if (!mounted) return;
-
     setState(() => _isTransposing = true);
 
     try {
@@ -82,11 +91,11 @@ class _TransposingScreenState extends State<TransposingScreen> {
     String message = "Looks like we hit a wrong note. Try again or double-check your file.";
 
     if (error.toString().contains('SocketException')) {
-      title = "Uh-oh! We couldn’t process your request.";
-      message = "There was an issue sending your request. Check your internet connection and try again.";
+      title = "No Internet Connection";
+      message = "We couldn't send your request. Please check your internet and try again.";
     } else if (error.toString().contains('500') || error.toString().contains('Internal Server Error')) {
-      title = "Oops! Something went wrong on our end.";
-      message = "We couldn’t complete the transposition due to a system error. Please try again later.";
+      title = "Server Error";
+      message = "Something went wrong on our end. Please try again later.";
     }
 
     showDialog(
@@ -94,22 +103,22 @@ class _TransposingScreenState extends State<TransposingScreen> {
       barrierDismissible: false,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        content: Text(message),
+        title: Text(title, style: AppTextStyles.bodyMedium),
+        content: Text(message, style: AppTextStyles.bodyText),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Go back to previous screen
+              Navigator.pop(context);
+              Navigator.pop(context);
             },
-            child: const Text("Cancel", style: TextStyle(color: Color.fromARGB(255, 98, 85, 139))),
+            child: const Text("Cancel", style: AppTextStyles.primaryAction),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context); // Close dialog
-              _startTransposition();   // Retry
+              Navigator.pop(context);
+              _startTransposition();
             },
-            child: const Text("Retry", style: TextStyle(color: Color.fromARGB(255, 98, 85, 139))),
+            child: const Text("Retry", style: AppTextStyles.primaryAction),
           ),
         ],
       ),
@@ -118,19 +127,10 @@ class _TransposingScreenState extends State<TransposingScreen> {
 
   int _calculateInterval(String originalKey, String transposedKey) {
     final keyMap = {
-      "C": 0,
-      "C#": 1,
-      "Db": 1,
-      "D": 2,
-      "Eb": 3,
-      "E": 4,
-      "F": 5,
-      "F#": 6,
-      "G": 7,
-      "Ab": 8,
-      "A": 9,
-      "Bb": 10,
-      "B": 11,
+      "C": 0, "C#": 1, "Db": 1,
+      "D": 2, "Eb": 3, "E": 4,
+      "F": 5, "F#": 6, "G": 7,
+      "Ab": 8, "A": 9, "Bb": 10, "B": 11,
     };
     int start = keyMap[originalKey.replaceAll(' major', '').replaceAll(' minor', '')] ?? 0;
     int end = keyMap[transposedKey.replaceAll(' major', '').replaceAll(' minor', '')] ?? 0;
@@ -140,21 +140,22 @@ class _TransposingScreenState extends State<TransposingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text("Transposing...", style: TextStyle(fontSize: 22)),
+            const Text(
+              "Transposing...",
+              style: AppTextStyles.largeHeading,
+            ),
             const SizedBox(height: 32),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 40),
               child: LinearProgressIndicator(
                 minHeight: 5,
                 backgroundColor: Color.fromARGB(50, 98, 85, 139),
-                valueColor: AlwaysStoppedAnimation(
-                  Color.fromARGB(255, 98, 85, 139),
-                ),
+                valueColor: AlwaysStoppedAnimation(AppColors.primaryPurple),
               ),
             ),
             const SizedBox(height: 32),

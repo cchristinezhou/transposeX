@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 
+/// A screen that allows users to add and manage their musical instruments.
+///
+/// Instruments are saved locally using SharedPreferences.
 class InstrumentScreen extends StatefulWidget {
+  /// Creates an [InstrumentScreen].
+  const InstrumentScreen({super.key});
+
   @override
   _InstrumentScreenState createState() => _InstrumentScreenState();
 }
 
 class _InstrumentScreenState extends State<InstrumentScreen> {
-  TextEditingController _instrumentController = TextEditingController();
+  final TextEditingController _instrumentController = TextEditingController();
   List<String> _instruments = [];
 
   @override
@@ -29,13 +37,13 @@ class _InstrumentScreenState extends State<InstrumentScreen> {
   }
 
   void _addInstrument() {
-    String instrument = _instrumentController.text.trim();
+    final instrument = _instrumentController.text.trim();
     if (instrument.isNotEmpty) {
       setState(() {
         _instruments.add(instrument);
         _instrumentController.clear();
       });
-      _saveInstrumentsToCache(); // Save after adding
+      _saveInstrumentsToCache();
     }
   }
 
@@ -43,81 +51,88 @@ class _InstrumentScreenState extends State<InstrumentScreen> {
     setState(() {
       _instruments.removeAt(index);
     });
-    _saveInstrumentsToCache(); // Save after deleting
+    _saveInstrumentsToCache();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
-        foregroundColor: Colors.black,
+        foregroundColor: AppColors.accent,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pop(context); // No need to save here; already saved on add/delete
+            Navigator.pop(context);
           },
         ),
-        title: Text(
-          "Back",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-        ),
+        title: const Text("Back", style: AppTextStyles.bodyMedium),
         centerTitle: false,
       ),
       body: Padding(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              "Instrument",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-            SizedBox(height: 5),
+            const Text("Instrument", style: AppTextStyles.bodyMedium),
+            const SizedBox(height: 5),
             TextField(
               controller: _instrumentController,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
+                  borderSide: BorderSide(color: AppColors.subtitleGrey),
                 ),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: AppColors.background,
                 hintText: "Value",
-                contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 15),
+                hintStyle: AppTextStyles.bodyText,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 15,
+                ),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Center(
               child: ElevatedButton(
                 onPressed: _addInstrument,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Color.fromARGB(255, 98, 85, 139),
-                  side: BorderSide(color: Color.fromARGB(255, 98, 85, 139)),
+                  backgroundColor: AppColors.background,
+                  foregroundColor: AppColors.primaryPurple,
+                  side: const BorderSide(color: AppColors.primaryPurple),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),
-                child: Text("Add an Instrument"),
+                child: const Text(
+                  "Add an Instrument",
+                  style: AppTextStyles.primaryAction,
+                ),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Expanded(
               child: ListView.builder(
                 itemCount: _instruments.length,
                 itemBuilder: (context, index) {
                   return Card(
-                    margin: EdgeInsets.symmetric(vertical: 5),
+                    margin: const EdgeInsets.symmetric(vertical: 5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: ListTile(
-                      title: Text(_instruments[index]),
+                      title: Text(
+                        _instruments[index],
+                        style: AppTextStyles.bodyText,
+                      ),
                       trailing: IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
+                        icon: const Icon(
+                          Icons.delete,
+                          color: AppColors.warningRed,
+                        ),
                         onPressed: () => _deleteInstrument(index),
                       ),
                     ),
@@ -130,13 +145,13 @@ class _InstrumentScreenState extends State<InstrumentScreen> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 2,
-        items: [
+        selectedItemColor: AppColors.primaryPurple,
+        unselectedItemColor: AppColors.subtitleGrey,
+        items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: "Saved"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
-        selectedItemColor: Color.fromARGB(255, 98, 85, 139),
-        unselectedItemColor: Colors.grey,
       ),
     );
   }

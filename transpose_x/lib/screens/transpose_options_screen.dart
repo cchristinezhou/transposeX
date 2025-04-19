@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
 import 'key_info_screen.dart';
 import 'transposing_screen.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 
+/// A screen that allows users to view the detected key and select a new key to transpose to.
+///
+/// Users can toggle between sharps and flats and adjust the key up or down.
 class TransposeOptionsScreen extends StatefulWidget {
+  /// The originally detected key of the uploaded sheet music.
   final String originalKey;
+
+  /// The raw XML content of the uploaded sheet music.
   final String xmlContent;
 
+  /// Creates a [TransposeOptionsScreen].
   const TransposeOptionsScreen({
     required this.originalKey,
     required this.xmlContent,
@@ -97,89 +106,92 @@ class _TransposeOptionsScreenState extends State<TransposeOptionsScreen> {
   }
 
   void _onTransposePressed() {
-  final original = widget.originalKey.trim().toLowerCase();
-  final selected = currentKey.trim().toLowerCase();
+    final original = widget.originalKey.trim().toLowerCase();
+    final selected = currentKey.trim().toLowerCase();
 
-  if (original == selected) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Oops! That’s the same key. Try transposing to spice things up 🎶"),
-        backgroundColor: Color.fromARGB(255, 98, 85, 139),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  } else {
-    Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (_) => TransposingScreen(
-      xmlContent: widget.xmlContent,
-      originalKey: widget.originalKey,
-      transposedKey: currentKey,
-      songName: "Uploaded Sheet",
-    ),
-  ),
-);
+    if (original == selected) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            "Oops! That’s the same key. Try transposing to spice things up 🎶",
+            style: AppTextStyles.bodyText,
+          ),
+          backgroundColor: AppColors.primaryPurple,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (_) => TransposingScreen(
+                xmlContent: widget.xmlContent,
+                originalKey: widget.originalKey,
+                transposedKey: currentKey,
+                songName: "Uploaded Sheet",
+              ),
+        ),
+      );
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(""),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.accent,
         elevation: 0,
+        title: const SizedBox.shrink(),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 30),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // TOP — Key detection result
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
+                const Text(
                   "Detection Successful!",
-                  style: TextStyle(fontSize: 18),
+                  style: AppTextStyles.bodyMedium,
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Text(
                   "It looks like your sheet is in ${widget.originalKey}.",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: AppTextStyles.bodyText.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 6),
+                const SizedBox(height: 6),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Wrap(
                     alignment: WrapAlignment.center,
                     children: [
-                      Text(
+                      const Text(
                         "* We only detect the dominant key. For more info, ",
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                        style: AppTextStyles.bodySmall,
                       ),
                       GestureDetector(
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => KeyInfoScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const KeyInfoScreen(),
+                            ),
                           );
                         },
-                        child: Text(
+                        child: const Text(
                           "learn more here.",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Color.fromARGB(255, 98, 85, 139),
-                            decoration: TextDecoration.underline,
-                          ),
+                          style: AppTextStyles.linkText,
                         ),
                       ),
                     ],
@@ -187,22 +199,19 @@ class _TransposeOptionsScreenState extends State<TransposeOptionsScreen> {
                 ),
               ],
             ),
-
-            // CENTER — Transpose controls
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(top: 100),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Toggle buttons
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text("Show as: "),
-                        SizedBox(width: 6),
+                        const Text("Show as: ", style: AppTextStyles.bodyText),
+                        const SizedBox(width: 6),
                         ChoiceChip(
-                          label: Text("♯"),
+                          label: const Text("♯"),
                           selected: showSharps,
                           onSelected: (_) {
                             setState(() {
@@ -210,10 +219,11 @@ class _TransposeOptionsScreenState extends State<TransposeOptionsScreen> {
                               _updateCurrentKey();
                             });
                           },
+                          selectedColor: AppColors.primaryPurple,
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         ChoiceChip(
-                          label: Text("♭"),
+                          label: const Text("♭"),
                           selected: !showSharps,
                           onSelected: (_) {
                             setState(() {
@@ -221,49 +231,39 @@ class _TransposeOptionsScreenState extends State<TransposeOptionsScreen> {
                               _updateCurrentKey();
                             });
                           },
+                          selectedColor: AppColors.primaryPurple,
                         ),
                       ],
                     ),
-                    SizedBox(height: 24),
-
-                    // Transpose UI
-                    Text(
+                    const SizedBox(height: 24),
+                    const Text(
                       "Transpose Options",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: AppTextStyles.bodyMedium,
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          currentKey,
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(width: 20),
+                        Text(currentKey, style: AppTextStyles.sectionHeading),
+                        const SizedBox(width: 20),
                         IconButton(
                           onPressed: _transposeUp,
-                          icon: Icon(Icons.add_circle_outline),
-                          color: Color.fromARGB(255, 98, 85, 139),
+                          icon: const Icon(Icons.add_circle_outline),
+                          color: AppColors.primaryPurple,
                         ),
                         IconButton(
                           onPressed: _transposeDown,
-                          icon: Icon(Icons.remove_circle_outline),
-                          color: Color.fromARGB(255, 98, 85, 139),
+                          icon: const Icon(Icons.remove_circle_outline),
+                          color: AppColors.primaryPurple,
                         ),
                       ],
                     ),
-                    SizedBox(height: 32),
+                    const SizedBox(height: 32),
                     ElevatedButton(
                       onPressed: _onTransposePressed,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromARGB(255, 98, 85, 139),
-                        padding: EdgeInsets.symmetric(
+                        backgroundColor: AppColors.primaryPurple,
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 50,
                           vertical: 14,
                         ),
@@ -271,9 +271,9 @@ class _TransposeOptionsScreenState extends State<TransposeOptionsScreen> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                       ),
-                      child: Text(
+                      child: const Text(
                         "Transpose",
-                        style: TextStyle(color: Colors.white, fontSize: 16),
+                        style: AppTextStyles.primaryButton,
                       ),
                     ),
                   ],

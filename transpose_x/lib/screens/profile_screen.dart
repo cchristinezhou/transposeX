@@ -4,34 +4,43 @@ import 'age_screen.dart';
 import 'instrument_screen.dart';
 import 'about_us_screen.dart';
 import 'privacy_policies_screen.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 
+/// A screen displaying user profile options like Name, Age, and Instrument.
+///
+/// Also provides navigation links to About Us and Privacy Policy screens.
 class ProfileScreen extends StatelessWidget {
+  /// Creates a [ProfileScreen].
+  const ProfileScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(
-          "My Profile",
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-        ),
+        title: const Text("My Profile", style: AppTextStyles.sectionHeading),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
-        foregroundColor: Colors.black,
+        foregroundColor: AppColors.accent,
       ),
       body: Column(
         children: [
-          SizedBox(height: 20), // Extra spacing after title
+          const SizedBox(height: 20),
           Expanded(
             child: Column(
               children: [
-                _buildProfileOption(context, "Name", NameScreen()),
-                Divider(thickness: 1, color: Colors.grey[300]),
-                _buildProfileOption(context, "Age", AgeScreen()),
-                Divider(thickness: 1, color: Colors.grey[300]),
-                _buildProfileOption(context, "Instrument", InstrumentScreen()),
-                Divider(thickness: 1, color: Colors.grey[300]),
+                _buildProfileOption(context, "Name", const NameScreen()),
+                _buildDivider(),
+                _buildProfileOption(context, "Age", const AgeScreen()),
+                _buildDivider(),
+                _buildProfileOption(
+                  context,
+                  "Instrument",
+                  const InstrumentScreen(),
+                ),
+                _buildDivider(),
               ],
             ),
           ),
@@ -50,11 +59,8 @@ class ProfileScreen extends StatelessWidget {
     Widget screen,
   ) {
     return ListTile(
-      title: Text(
-        title,
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-      ),
-      trailing: Icon(Icons.arrow_forward_ios, size: 18),
+      title: Text(title, style: AppTextStyles.bodyMedium),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 18),
       onTap: () {
         Navigator.of(context).push(
           PageRouteBuilder(
@@ -68,16 +74,25 @@ class ProfileScreen extends StatelessWidget {
               const begin = Offset(1.0, 0.0);
               const end = Offset.zero;
               const curve = Curves.easeInOut;
-              var tween = Tween(
+              final tween = Tween(
                 begin: begin,
                 end: end,
               ).chain(CurveTween(curve: curve));
-              var offsetAnimation = animation.drive(tween);
+              final offsetAnimation = animation.drive(tween);
+
               return SlideTransition(position: offsetAnimation, child: child);
             },
           ),
         );
       },
+    );
+  }
+
+  Widget _buildDivider() {
+    return const Divider(
+      thickness: 1,
+      color: AppColors.subtitleGrey,
+      height: 0,
     );
   }
 
@@ -88,34 +103,20 @@ class ProfileScreen extends StatelessWidget {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => AboutUsScreen()),
+              MaterialPageRoute(builder: (_) => const AboutUsScreen()),
             );
           },
-          child: Text(
-            "About Us",
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.black,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          child: const Text("About Us", style: AppTextStyles.bottomLink),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         GestureDetector(
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => PrivacyPolicyScreen()),
+              MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
             );
           },
-          child: Text(
-            "Privacy Policy",
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.black,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          child: const Text("Privacy Policy", style: AppTextStyles.bottomLink),
         ),
       ],
     );

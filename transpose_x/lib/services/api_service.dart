@@ -3,21 +3,21 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
+/// Handles API interactions for uploading, transposing, saving, and retrieving music sheets.
 class ApiService {
-  static const String _baseUrl =
-      "http://10.0.0.246:3000"; // Change for deployment
+  static const String _baseUrl = 'http://10.0.0.246:3000'; // Change for deployment
   static const String _uploadEndpoint = "$_baseUrl/upload";
   static const String _transposeEndpoint = "$_baseUrl/api/transpose";
   static const String _savedSongsEndpoint = "$_baseUrl/saved-songs";
   static const String _saveSongEndpoint = "$_baseUrl/save-song";
 
-  /// Upload a single image file and return its MusicXML content as a string
+  /// Uploads a single image file and returns its MusicXML content as a [String].
+  ///
+  /// Returns `null` if the upload or XML fetch fails.
   static Future<String?> uploadFile(String filePath, String sheetName) async {
     try {
       final request = http.MultipartRequest("POST", Uri.parse(_uploadEndpoint));
-      request.files.add(
-        await http.MultipartFile.fromPath('musicImage', filePath),
-      );
+      request.files.add(await http.MultipartFile.fromPath('musicImage', filePath));
       request.fields['sheetName'] = sheetName;
 
       final response = await request.send();
@@ -45,16 +45,17 @@ class ApiService {
     }
   }
 
-  /// Upload a single file and get raw file content as bytes (for MXL/XML cases)
+  /// Uploads a single image file and returns its raw file content as [Uint8List].
+  ///
+  /// Useful for handling MXL or binary XML files.
+  /// Returns `null` if the upload or retrieval fails.
   static Future<Uint8List?> uploadFileReturningBytes(
     String filePath,
     String sheetName,
   ) async {
     try {
       final request = http.MultipartRequest("POST", Uri.parse(_uploadEndpoint));
-      request.files.add(
-        await http.MultipartFile.fromPath('musicImage', filePath),
-      );
+      request.files.add(await http.MultipartFile.fromPath('musicImage', filePath));
       request.fields['sheetName'] = sheetName;
 
       final response = await request.send();
@@ -82,7 +83,9 @@ class ApiService {
     }
   }
 
-  /// Upload multiple files and return true if all succeed
+  /// Uploads multiple files sequentially.
+  ///
+  /// Returns `true` if all uploads succeed, `false` otherwise.
   static Future<bool> uploadFiles(List<String> filePaths) async {
     for (final path in filePaths) {
       final result = await uploadFile(path, "DefaultSheetName");
@@ -91,7 +94,10 @@ class ApiService {
     return true;
   }
 
-  /// Request transposed XML with a given interval
+  /// Sends a MusicXML file and an interval to the backend for transposition.
+  ///
+  /// Returns the transposed MusicXML content as a [String].
+  /// Throws an [Exception] if the request fails.
   static Future<String> transposeSong({
     required String xml,
     required int interval,
@@ -115,7 +121,10 @@ class ApiService {
     }
   }
 
-  /// Save a transposed song to the backend
+  /// Saves a song to the backend database.
+  ///
+  /// Includes song [name], [xml] content, [originalKey], and [transposedKey].
+  /// Returns `true` if the save succeeds, `false` otherwise.
   static Future<bool> saveSongToDatabase({
     required String name,
     required String xml,
@@ -147,7 +156,9 @@ class ApiService {
     }
   }
 
-  /// Fetch list of saved songs from the backend
+  /// Fetches a list of all saved songs from the backend.
+  ///
+  /// Returns a list of song metadata as a [List] of [Map<String, dynamic>].
   static Future<List<Map<String, dynamic>>> getSavedSongs() async {
     try {
       final response = await http.get(Uri.parse(_savedSongsEndpoint));
@@ -164,7 +175,9 @@ class ApiService {
     }
   }
 
-  /// Delete a saved song by its ID
+  /// Deletes a saved song from the backend by its [id].
+  ///
+  /// Returns `true` if the deletion succeeds, `false` otherwise.
   static Future<bool> deleteSongFromDatabase(int id) async {
     try {
       final response = await http.delete(Uri.parse('$_baseUrl/songs/$id'));
@@ -182,6 +195,9 @@ class ApiService {
     }
   }
 
+  /// Renames a saved sheet from [oldName] to [newName].
+  ///
+  /// Returns `true` if the rename succeeds, `false` otherwise.
   static Future<bool> renameSheet(String oldName, String newName) async {
     try {
       final response = await http.post(
@@ -193,7 +209,7 @@ class ApiService {
       return response.statusCode == 200;
     } catch (e) {
       print('❌ Rename sheet failed: $e');
-      return false; // Gracefully fail
+      return false;
     }
   }
 }

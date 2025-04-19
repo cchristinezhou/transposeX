@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 
+/// A screen where the user can select and save their age.
+///
+/// The selected age is persisted locally using SharedPreferences.
 class AgeScreen extends StatefulWidget {
+  /// Creates an [AgeScreen].
+  const AgeScreen({super.key});
+
   @override
   _AgeScreenState createState() => _AgeScreenState();
 }
@@ -32,56 +40,56 @@ class _AgeScreenState extends State<AgeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
-        foregroundColor: Colors.black,
+        foregroundColor: AppColors.accent,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () async {
             await _saveAgeToCache(); // Save selected age
             Navigator.pop(context);
           },
         ),
-        title: Text(
+        title: const Text(
           "Back",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+          style: AppTextStyles.buttonText, // Close enough match
         ),
         centerTitle: false,
       ),
       body: Padding(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.edit, color: Colors.black54, size: 20),
+              children: const [
+                Icon(Icons.edit, color: AppColors.subtitleGrey, size: 20),
                 SizedBox(width: 8),
                 Text(
                   "Your Age",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  style: AppTextStyles.bodyMedium,
                 ),
               ],
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Color(0xFFEDE7F6),
+                color: AppColors.offWhite,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade300),
+                border: Border.all(color: AppColors.subtitleGrey),
               ),
-              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
               child: DropdownButton<int>(
                 value: _selectedAge,
                 isExpanded: true,
-                icon: Icon(Icons.arrow_drop_down),
+                icon: const Icon(Icons.arrow_drop_down),
                 iconSize: 24,
-                dropdownColor: Color(0xFFEDE7F6),
-                underline: SizedBox(),
+                dropdownColor: AppColors.offWhite,
+                underline: const SizedBox(),
                 onChanged: (int? newValue) {
                   setState(() {
                     _selectedAge = newValue;
@@ -94,7 +102,7 @@ class _AgeScreenState extends State<AgeScreen> {
                     child: Center(
                       child: Text(
                         value.toString(),
-                        style: TextStyle(fontSize: 16),
+                        style: AppTextStyles.bodyText,
                       ),
                     ),
                   );
@@ -106,13 +114,13 @@ class _AgeScreenState extends State<AgeScreen> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 2,
-        items: [
+        selectedItemColor: AppColors.primaryPurple,
+        unselectedItemColor: AppColors.subtitleGrey,
+        items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: "Saved"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
-        selectedItemColor: Colors.purple,
-        unselectedItemColor: Colors.grey,
       ),
     );
   }

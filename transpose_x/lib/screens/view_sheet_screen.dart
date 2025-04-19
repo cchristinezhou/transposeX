@@ -3,17 +3,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:path_provider/path_provider.dart';
-
 import '../utils/file_export.dart';
-import 'package:share_plus/share_plus.dart';
 import '../services/api_service.dart';
+import 'package:share_plus/share_plus.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 
+/// A screen that displays a MusicXML sheet using a WebView viewer.
+///
+/// Allows users to zoom, rename, download, and share their sheet music.
 class ViewSheetScreen extends StatefulWidget {
+  /// The MusicXML content.
   final String xmlContent;
+
+  /// The key signature of the sheet.
   final String keySignature;
+
+  /// The original filename of the sheet.
   final String fileName;
+
+  /// The initial title to display if [fileName] is empty.
   final String initialTitle;
 
+  /// Creates a [ViewSheetScreen].
   const ViewSheetScreen({
     Key? key,
     required this.xmlContent,
@@ -41,24 +53,25 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
   }
 
   void _initializeWebView() {
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageFinished: (_) => _injectXml(widget.xmlContent),
-        ),
-      );
+    _controller =
+        WebViewController()
+          ..setJavaScriptMode(JavaScriptMode.unrestricted)
+          ..setNavigationDelegate(
+            NavigationDelegate(
+              onPageFinished: (_) => _injectXml(widget.xmlContent),
+            ),
+          );
     _loadViewerHtml();
   }
 
   Future<void> _loadViewerHtml() async {
     final html = await rootBundle.loadString('assets/viewer.html');
-    final encodedHtml = Uri.dataFromString(
-      html,
-      mimeType: 'text/html',
-      encoding: Encoding.getByName('utf-8'),
-    ).toString();
-
+    final encodedHtml =
+        Uri.dataFromString(
+          html,
+          mimeType: 'text/html',
+          encoding: Encoding.getByName('utf-8'),
+        ).toString();
     _controller.loadRequest(Uri.parse(encodedHtml));
   }
 
@@ -68,7 +81,7 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
       const xmlStr = atob('$encoded');
       window.postMessage({ type: 'loadXml', xml: xmlStr });
     """;
-    _controller.runJavaScript(script);
+    await _controller.runJavaScript(script);
   }
 
   Future<void> _zoom(double factor) async {
@@ -78,73 +91,75 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
     );
   }
 
- void _showRenameDialog() {
-  final controller = TextEditingController(text: _title);
+  void _showRenameDialog() {
+    final controller = TextEditingController(text: _title);
 
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text("Rename Your Sheet"),
-      content: TextField(
-        controller: controller,
-        decoration: InputDecoration(hintText: "Enter new title"),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text("Cancel"),
-        ),
-        TextButton(
-          onPressed: () async {
-            final newName = controller.text.trim();
-            if (newName.isEmpty) return;
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text(
+              "Rename Your Sheet",
+              style: AppTextStyles.bodyMedium,
+            ),
+            content: TextField(
+              controller: controller,
+              decoration: const InputDecoration(hintText: "Enter new title"),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancel", style: AppTextStyles.primaryAction),
+              ),
+              TextButton(
+                onPressed: () async {
+                  final newName = controller.text.trim();
+                  if (newName.isEmpty) return;
+                  setState(() {
+                    _title = newName;
+                  });
+                  Navigator.pop(context);
 
-            setState(() {
-              _title = newName;
-            });
-            Navigator.pop(context);
-
-            try {
-              // TODO: call your backend to save new name
-              final success = await ApiService.renameSheet(widget.fileName, newName);
-
-              if (!mounted) return;
-              if (success) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("✅ Renamed successfully!")),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("❌ Failed to rename on server.")),
-                );
-              }
-            } catch (e) {
-              if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text("❌ Error updating name.")),
-              );
-              print('❌ Rename error: $e');
-            }
-          },
-          child: Text("Save"),
-        ),
-      ],
-    ),
-  );
-}
+                  try {
+                    final success = await ApiService.renameSheet(
+                      widget.fileName,
+                      newName,
+                    );
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          success
+                              ? "✅ Renamed successfully!"
+                              : "❌ Failed to rename on server.",
+                        ),
+                      ),
+                    );
+                  } catch (e) {
+                    if (!mounted) return;
+                    print('❌ Rename error: $e');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("❌ Error updating name.")),
+                    );
+                  }
+                },
+                child: const Text("Save", style: AppTextStyles.primaryAction),
+              ),
+            ],
+          ),
+    );
+  }
 
   void _showDownloadOptions() {
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildDownloadOption("XML", Icons.code, () async {
+      builder:
+          (context) => Container(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: _buildDownloadOption("XML", Icons.code, () async {
               try {
                 final file = await saveXmlFile(widget.xmlContent);
                 await saveToDownloads(file);
@@ -152,13 +167,11 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
               } catch (e) {
                 print('❌ XML save failed: $e');
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("❌ Failed to save XML.")),
+                  const SnackBar(content: Text("❌ Failed to save XML.")),
                 );
               }
             }),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -168,8 +181,8 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
 
   Widget _buildDownloadOption(String label, IconData icon, VoidCallback onTap) {
     return ListTile(
-      leading: Icon(icon, color: Colors.black),
-      title: Text(label),
+      leading: const Icon(Icons.code, color: AppColors.accent),
+      title: Text(label, style: AppTextStyles.bodyMedium),
       onTap: () {
         Navigator.pop(context);
         onTap();
@@ -180,15 +193,21 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(_title),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.accent,
         elevation: 0,
+        title: Text(_title, style: AppTextStyles.bodyMedium),
         actions: [
-          IconButton(icon: Icon(Icons.zoom_in), onPressed: () => _zoom(1.2)),
-          IconButton(icon: Icon(Icons.zoom_out), onPressed: () => _zoom(0.8)),
+          IconButton(
+            icon: const Icon(Icons.zoom_in),
+            onPressed: () => _zoom(1.2),
+          ),
+          IconButton(
+            icon: const Icon(Icons.zoom_out),
+            onPressed: () => _zoom(0.8),
+          ),
           PopupMenuButton<String>(
             onSelected: (value) {
               if (value == "Rename") {
@@ -199,11 +218,12 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
                 _shareXml();
               }
             },
-            itemBuilder: (context) => [
-              PopupMenuItem(value: "Rename", child: Text("Rename")),
-              PopupMenuItem(value: "Download", child: Text("Download XML")),
-              PopupMenuItem(value: "Share", child: Text("Share XML")),
-            ],
+            itemBuilder:
+                (context) => const [
+                  PopupMenuItem(value: "Rename", child: Text("Rename")),
+                  PopupMenuItem(value: "Download", child: Text("Download XML")),
+                  PopupMenuItem(value: "Share", child: Text("Share XML")),
+                ],
           ),
         ],
       ),
@@ -216,15 +236,15 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
 
   void _showSuccessSnackBar() {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      const SnackBar(
         content: Row(
-          children: const [
+          children: [
             Icon(Icons.check_circle_outline, color: Colors.white),
             SizedBox(width: 12),
             Text("Download successful!"),
           ],
         ),
-        backgroundColor: Colors.green[600],
+        backgroundColor: AppColors.successGreen,
         duration: Duration(seconds: 2),
       ),
     );

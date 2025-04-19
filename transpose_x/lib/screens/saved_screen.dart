@@ -3,8 +3,15 @@ import 'package:share_plus/share_plus.dart';
 import '../services/api_service.dart';
 import '../utils/file_export.dart';
 import 'view_sheet_screen.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 
+/// A screen that displays the list of saved sheet music,
+/// allowing users to rename, download, and share their sheets.
 class SavedScreen extends StatefulWidget {
+  /// Creates a [SavedScreen].
+  const SavedScreen({super.key});
+
   @override
   _SavedScreenState createState() => _SavedScreenState();
 }
@@ -55,7 +62,7 @@ class _SavedScreenState extends State<SavedScreen> {
   }
 
   void _showRenameDialog(BuildContext parentContext, int index) {
-    TextEditingController _controller = TextEditingController(
+    final TextEditingController _controller = TextEditingController(
       text: savedSongs[index]["name"] ?? "Untitled",
     );
 
@@ -66,32 +73,24 @@ class _SavedScreenState extends State<SavedScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            title: Text("Rename Your Music Sheet"),
+            title: const Text(
+              "Rename Your Music Sheet",
+              style: AppTextStyles.heading,
+            ),
             content: TextField(
               controller: _controller,
-              decoration: InputDecoration(
-                hintText: "Enter new name",
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Color.fromARGB(255, 98, 85, 139),
-                  ),
-                ),
-              ),
+              decoration: const InputDecoration(hintText: "Enter new name"),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
-                child: Text(
-                  "Cancel",
-                  style: TextStyle(color: Color.fromARGB(255, 98, 85, 139)),
-                ),
+                child: const Text("Cancel", style: AppTextStyles.primaryAction),
               ),
               TextButton(
                 onPressed: () async {
                   final newName = _controller.text.trim();
                   final oldName = savedSongs[index]["name"];
-
-                  final scaffoldContext = parentContext; // 👈 Save BEFORE pop
+                  final scaffoldContext = parentContext;
                   Navigator.pop(dialogContext);
 
                   if (newName.isNotEmpty && oldName != null) {
@@ -99,29 +98,27 @@ class _SavedScreenState extends State<SavedScreen> {
                       oldName,
                       newName,
                     );
-
                     if (!mounted) return;
 
                     if (success) {
                       setState(() {
                         savedSongs[index]["name"] = newName;
                       });
-                      _showSuccessSnackBar(
+                      _showSnackBar(
                         scaffoldContext,
                         "✅ Renamed successfully!",
+                        true,
                       );
                     } else {
-                      _showErrorSnackBar(
+                      _showSnackBar(
                         scaffoldContext,
                         "❌ Failed to rename.",
+                        false,
                       );
                     }
                   }
                 },
-                child: Text(
-                  "Save",
-                  style: TextStyle(color: Color.fromARGB(255, 98, 85, 139)),
-                ),
+                child: const Text("Save", style: AppTextStyles.primaryAction),
               ),
             ],
           ),
@@ -133,7 +130,7 @@ class _SavedScreenState extends State<SavedScreen> {
 
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder:
@@ -142,32 +139,33 @@ class _SavedScreenState extends State<SavedScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ListTile(
-                  leading: Icon(Icons.edit, color: Colors.black),
-                  title: Text('Rename'),
+                _buildOptionTile(
+                  icon: Icons.edit,
+                  label: "Rename",
                   onTap: () {
                     Navigator.pop(sheetContext);
                     _showRenameDialog(context, index);
                   },
                 ),
-                ListTile(
-                  leading: Icon(Icons.download, color: Colors.black),
-                  title: Text('Download XML'),
+                _buildOptionTile(
+                  icon: Icons.download,
+                  label: "Download XML",
                   onTap: () async {
                     final scaffoldContext = context;
                     Navigator.pop(sheetContext);
                     final file = await saveXmlFile(song["xml"]);
                     await saveToDownloads(file);
                     if (mounted)
-                      _showSuccessSnackBar(
+                      _showSnackBar(
                         scaffoldContext,
                         "✅ Download successful!",
+                        true,
                       );
                   },
                 ),
-                ListTile(
-                  leading: Icon(Icons.share, color: Colors.black),
-                  title: Text('Share XML'),
+                _buildOptionTile(
+                  icon: Icons.share,
+                  label: "Share XML",
                   onTap: () {
                     Navigator.pop(sheetContext);
                     shareXmlContent(song["xml"]);
@@ -179,34 +177,34 @@ class _SavedScreenState extends State<SavedScreen> {
     );
   }
 
-  void _showSuccessSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle_outline, color: Colors.white),
-            SizedBox(width: 12),
-            Text(message),
-          ],
-        ),
-        backgroundColor: Colors.green[600],
-        duration: Duration(seconds: 2),
-      ),
+  Widget _buildOptionTile({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: AppColors.accent),
+      title: Text(label, style: AppTextStyles.bodyMedium),
+      onTap: onTap,
     );
   }
 
-  void _showErrorSnackBar(BuildContext context, String message) {
+  void _showSnackBar(BuildContext context, String message, bool isSuccess) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            Icon(Icons.error_outline, color: Colors.white),
-            SizedBox(width: 12),
-            Text(message),
+            Icon(
+              isSuccess ? Icons.check_circle_outline : Icons.error_outline,
+              color: Colors.white,
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
           ],
         ),
-        backgroundColor: Colors.red[600],
-        duration: Duration(seconds: 2),
+        backgroundColor:
+            isSuccess ? AppColors.successGreen : AppColors.warningRed,
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -214,35 +212,35 @@ class _SavedScreenState extends State<SavedScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
-        title: Text(
-          "Saved",
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
+        title: const Text("Saved", style: AppTextStyles.heading),
         centerTitle: true,
       ),
       body:
           isLoading
-              ? Center(child: CircularProgressIndicator())
+              ? const Center(child: CircularProgressIndicator())
               : savedSongs.isEmpty
-              ? Center(child: Text("No saved songs yet 💤"))
+              ? const Center(
+                child: Text(
+                  "No saved songs yet 💤",
+                  style: AppTextStyles.bodyText,
+                ),
+              )
               : Scrollbar(
                 thumbVisibility: true,
                 thickness: 6,
-                radius: Radius.circular(10),
+                radius: const Radius.circular(10),
                 child: ListView.separated(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   itemCount: savedSongs.length,
                   separatorBuilder:
-                      (context, index) =>
-                          Divider(height: 1, color: Colors.grey[300]),
+                      (context, index) => const Divider(
+                        height: 1,
+                        color: AppColors.subtitleGrey,
+                      ),
                   itemBuilder: (context, index) {
                     final song = savedSongs[index];
                     return ListTile(
@@ -261,24 +259,24 @@ class _SavedScreenState extends State<SavedScreen> {
                         );
                         fetchSavedSongs(); // Refresh after editing
                       },
-                      leading: Icon(
+                      leading: const Icon(
                         Icons.description,
                         size: 28,
-                        color: Colors.black,
+                        color: AppColors.accent,
                       ),
                       title: Text(
                         song["name"] ?? "Untitled",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style: AppTextStyles.bodyMedium,
                       ),
                       subtitle: Text(
                         song["transposedKey"] ?? "Unknown",
-                        style: TextStyle(color: Colors.grey[700]),
+                        style: AppTextStyles.bodySmall,
                       ),
                       trailing: IconButton(
-                        icon: Icon(Icons.more_vert, color: Colors.grey[600]),
+                        icon: const Icon(
+                          Icons.more_vert,
+                          color: AppColors.subtitleGrey,
+                        ),
                         onPressed: () => _showOptionsMenu(context, index),
                       ),
                     );

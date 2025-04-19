@@ -4,9 +4,14 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-const String _baseUrl = "http://10.0.0.246:3000"; // Local backend address
+const String _baseUrl = 'http://10.0.0.246:3000'; // Local backend address
 
-/// Save XML to file
+/// Saves XML content to a temporary file.
+///
+/// If [directory] is provided, saves the file inside that directory.
+/// Otherwise, defaults to the device's temporary directory.
+///
+/// Returns the saved [File] object.
 Future<File> saveXmlFile(String xmlContent, [Directory? directory]) async {
   directory ??= await getTemporaryDirectory();
   final file = File('${directory.path}/transposed_sheet.xml');
@@ -14,7 +19,15 @@ Future<File> saveXmlFile(String xmlContent, [Directory? directory]) async {
   return file;
 }
 
-/// Share XML (with optional context to show Snackbar)
+/// Shares XML content using the native sharing interface.
+///
+/// If a [context] is provided, a success [SnackBar] will be displayed
+/// after sharing.
+///
+/// Example:
+/// ```dart
+/// await shareXmlContent(myXmlString, context: context);
+/// ```
 Future<void> shareXmlContent(String xmlContent, {BuildContext? context}) async {
   final file = await saveXmlFile(xmlContent);
   await Share.shareXFiles(
@@ -33,13 +46,24 @@ Future<void> shareXmlContent(String xmlContent, {BuildContext? context}) async {
           ],
         ),
         backgroundColor: Colors.green[600],
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
 }
 
-/// Save to Downloads folder
+/// Saves a [File] to the user's Downloads folder.
+///
+/// - On **Android**, manually copies the file to `/storage/emulated/0/Download/`.
+/// - On **iOS**, opens the share sheet instead (since there's no public Downloads folder).
+///
+/// Requests storage permission on Android if necessary.
+///
+/// Example:
+/// ```dart
+/// final file = await saveXmlFile(xmlContent);
+/// await saveToDownloads(file);
+/// ```
 Future<void> saveToDownloads(File file) async {
   if (Platform.isAndroid) {
     final status = await Permission.storage.request();
