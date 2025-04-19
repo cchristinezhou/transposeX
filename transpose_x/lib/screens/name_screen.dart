@@ -1,18 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 import 'home_screen.dart';
 import 'saved_screen.dart';
 
+/// A screen where users can input and save their full name.
+///
+/// Stores the first, middle, and last name locally using [SharedPreferences].
+/// Improves user profile personalization within the app.
 class NameScreen extends StatefulWidget {
+  /// Creates an instance of [NameScreen].
+  const NameScreen({super.key});
+
   @override
   _NameScreenState createState() => _NameScreenState();
 }
 
 class _NameScreenState extends State<NameScreen> {
-  final _firstNameController = TextEditingController();
-  final _middleNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
+  /// Controller for the first name input field.
+  final TextEditingController _firstNameController = TextEditingController();
+
+  /// Controller for the middle name input field.
+  final TextEditingController _middleNameController = TextEditingController();
+
+  /// Controller for the last name input field.
+  final TextEditingController _lastNameController = TextEditingController();
 
   @override
   void initState() {
@@ -20,6 +33,7 @@ class _NameScreenState extends State<NameScreen> {
     _loadCachedNames();
   }
 
+  /// Loads cached name data from local storage if available.
   Future<void> _loadCachedNames() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -29,6 +43,7 @@ class _NameScreenState extends State<NameScreen> {
     });
   }
 
+  /// Saves the current name fields into local storage.
   Future<void> _saveNamesToCache() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('firstName', _firstNameController.text);
@@ -48,25 +63,27 @@ class _NameScreenState extends State<NameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
-        foregroundColor: Colors.black,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+        foregroundColor: AppColors.accent,
+        leading: Semantics(
+          label: "Back to previous screen",
+          button: true,
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () async {
+              await _saveNamesToCache();
+              Navigator.pop(context);
+            },
+          ),
         ),
-        title: Text(
-          "Back",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-        ),
+        title: const Text("Back", style: AppTextStyles.bodyMedium),
         centerTitle: false,
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -78,13 +95,13 @@ class _NameScreenState extends State<NameScreen> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 2,
+        selectedItemColor: AppColors.primaryPurple,
+        unselectedItemColor: AppColors.subtitleGrey,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: "Saved"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
-        selectedItemColor: Color.fromARGB(255, 98, 85, 139),
-        unselectedItemColor: Colors.grey,
         onTap: (index) {
           _saveNamesToCache();
           if (index == 0) {
@@ -103,25 +120,35 @@ class _NameScreenState extends State<NameScreen> {
     );
   }
 
+  /// Builds a labeled text field with accessibility support.
+  ///
+  /// [label] is the field description, [controller] handles the input text.
   Widget _buildTextField(String label, TextEditingController controller) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 15),
+      padding: const EdgeInsets.only(bottom: 15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-          SizedBox(height: 5),
+          Semantics(
+            label: "$label input field",
+            textField: true,
+            child: Text(label, style: AppTextStyles.bodyMedium),
+          ),
+          const SizedBox(height: 5),
           TextField(
             controller: controller,
             decoration: InputDecoration(
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.grey.shade300),
+                borderSide: BorderSide(color: AppColors.subtitleGrey),
               ),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: AppColors.background,
               hintText: "Value",
-              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 15),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 15,
+              ),
             ),
           ),
         ],

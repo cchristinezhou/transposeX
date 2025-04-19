@@ -1,4 +1,3 @@
-// camera_screen.dart
 import '../services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
@@ -10,16 +9,30 @@ import 'dart:convert';
 import 'package:xml/xml.dart';
 import 'view_uploaded_sheet_screen.dart';
 import '../utils/xml_merge_helper.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 
+/// A screen that allows users to capture or select images,
+/// upload them for processing, and view the merged sheet music.
 class CameraScreen extends StatefulWidget {
+  /// Creates a [CameraScreen].
+  const CameraScreen({super.key});
+
   @override
   _CameraScreenState createState() => _CameraScreenState();
 }
 
 class _CameraScreenState extends State<CameraScreen> {
+  /// Controller for managing the device camera.
   CameraController? _cameraController;
+
+  /// List of available device cameras.
   late List<CameraDescription> _cameras;
+
+  /// Whether the camera has been successfully initialized.
   bool _isCameraInitialized = false;
+
+  /// List of captured or selected images.
   List<XFile> _capturedImages = [];
 
   @override
@@ -28,6 +41,7 @@ class _CameraScreenState extends State<CameraScreen> {
     _initializeCamera();
   }
 
+  /// Initializes the device camera.
   Future<void> _initializeCamera() async {
     try {
       _cameras = await availableCameras();
@@ -43,6 +57,7 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
+  /// Captures an image using the device camera.
   Future<void> _captureImage() async {
     if (!_isCameraInitialized || _cameraController == null) return;
     try {
@@ -53,6 +68,7 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
+  /// Allows user to pick multiple images from gallery.
   Future<void> _pickImagesFromGallery() async {
     final picker = ImagePicker();
     final List<XFile>? selectedImages = await picker.pickMultiImage();
@@ -61,20 +77,24 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
+  /// Uploads and merges the selected images into a single MusicXML file.
   Future<void> _uploadAndMerge() async {
     if (_capturedImages.isEmpty) return;
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => Center(child: CircularProgressIndicator()),
+      builder: (_) => const Center(child: CircularProgressIndicator()),
     );
 
     try {
       List<XmlDocument> parsedDocs = [];
 
       for (XFile image in _capturedImages) {
-        final bytes = await ApiService.uploadFileReturningBytes(image.path, image.name);
+        final bytes = await ApiService.uploadFileReturningBytes(
+          image.path,
+          image.name,
+        );
         if (bytes == null) continue;
 
         if (_isZip(bytes)) {
@@ -117,6 +137,7 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
+  /// Checks if the file is a ZIP archive.
   bool _isZip(Uint8List bytes) {
     return bytes.length >= 4 &&
         bytes[0] == 0x50 &&
@@ -125,29 +146,34 @@ class _CameraScreenState extends State<CameraScreen> {
         (bytes[3] == 0x04 || bytes[3] == 0x06 || bytes[3] == 0x08);
   }
 
+  /// Displays a warning dialog when the upload fails.
   void _showWarningDialog() {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text("Warning", style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text(
-          "We couldn't recognize your image(s). Make sure your photo is clear, well-lit, and shows the full sheet music. Try again or pick a different image.",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Cancel", style: TextStyle(color: Color(0xFF62558B))),
+      builder:
+          (_) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: const Text("Warning", style: AppTextStyles.heading),
+            content: const Text(
+              "We couldn't recognize your image(s). Make sure your photo is clear, well-lit, and shows the full sheet music. Try again or pick a different image.",
+              style: AppTextStyles.bodyText,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancel", style: AppTextStyles.primaryAction),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _uploadAndMerge();
+                },
+                child: const Text("Retry", style: AppTextStyles.primaryAction),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _uploadAndMerge();
-            },
-            child: Text("Retry", style: TextStyle(color: Color(0xFF62558B))),
-          ),
-        ],
-      ),
     );
   }
 
@@ -160,30 +186,39 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: AppColors.accent),
+          tooltip: "Back to previous screen",
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text("Back", style: TextStyle(color: Colors.black)),
+        title: const Text("Back", style: AppTextStyles.bodyMedium),
       ),
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: _isCameraInitialized
-                ? CameraPreview(_cameraController!)
-                : Center(child: CircularProgressIndicator()),
-          ),
-          if (_capturedImages.isNotEmpty)
-            Positioned(
-              bottom: 20,
-              right: 20,
-              child: _buildCapturedImageThumbnails(),
+      body: Semantics(
+        label: "Camera screen. Use capture or upload images.",
+        explicitChildNodes: true,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child:
+                  _isCameraInitialized
+                      ? Semantics(
+                        label: "Camera preview",
+                        child: CameraPreview(_cameraController!),
+                      )
+                      : const Center(child: CircularProgressIndicator()),
             ),
-        ],
+            if (_capturedImages.isNotEmpty)
+              Positioned(
+                bottom: 20,
+                right: 20,
+                child: _buildCapturedImageThumbnails(),
+              ),
+          ],
+        ),
       ),
       bottomNavigationBar: _buildCameraControls(),
     );
@@ -200,13 +235,16 @@ class _CameraScreenState extends State<CameraScreen> {
             Positioned(
               top: i * 3.0,
               right: i * 3.0,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.file(
-                  File(_capturedImages[i].path),
-                  width: 60,
-                  height: 60,
-                  fit: BoxFit.cover,
+              child: Semantics(
+                label: "Captured image ${i + 1}",
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.file(
+                    File(_capturedImages[i].path),
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),
@@ -214,14 +252,14 @@ class _CameraScreenState extends State<CameraScreen> {
             top: 0,
             right: 0,
             child: Container(
-              padding: EdgeInsets.all(5),
-              decoration: BoxDecoration(
-                color: Colors.purple,
+              padding: const EdgeInsets.all(5),
+              decoration: const BoxDecoration(
+                color: AppColors.primaryPurple,
                 shape: BoxShape.circle,
               ),
               child: Text(
                 _capturedImages.length.toString(),
-                style: TextStyle(color: Colors.white, fontSize: 12),
+                style: AppTextStyles.badgeText,
               ),
             ),
           ),
@@ -231,42 +269,57 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   Widget _buildCameraControls() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 30, vertical: 30),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                icon: Icon(Icons.photo, size: 30, color: Color(0xFF62558B)),
-                onPressed: _pickImagesFromGallery,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Semantics(
+            button: true,
+            label: "Pick images from gallery",
+            child: IconButton(
+              icon: const Icon(
+                Icons.photo,
+                size: 30,
+                color: AppColors.primaryPurple,
               ),
-              GestureDetector(
-                onTap: _captureImage,
-                child: Container(
-                  width: 70,
-                  height: 70,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Color(0xFF62558B), width: 5),
-                  ),
-                ),
-              ),
-              GestureDetector(
-                onTap: _uploadAndMerge,
-                child: Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(shape: BoxShape.circle),
-                  child: Icon(Icons.check_circle, size: 40, color: Color(0xFF62558B)),
-                ),
-              ),
-            ],
+              onPressed: _pickImagesFromGallery,
+            ),
           ),
-        ),
-      ],
+          Semantics(
+            button: true,
+            label: "Capture image from camera",
+            child: GestureDetector(
+              onTap: _captureImage,
+              child: Container(
+                width: 70,
+                height: 70,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.primaryPurple, width: 5),
+                ),
+              ),
+            ),
+          ),
+          Semantics(
+            button: true,
+            label: "Upload and merge images",
+            child: GestureDetector(
+              onTap: _uploadAndMerge,
+              child: Container(
+                width: 50,
+                height: 50,
+                decoration: const BoxDecoration(shape: BoxShape.circle),
+                child: const Icon(
+                  Icons.check_circle,
+                  size: 40,
+                  color: AppColors.primaryPurple,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,18 +1,29 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'transpose_result_screen.dart';
-import '../services/api_service.dart';
 import 'package:path_provider/path_provider.dart';
-import 'dart:io';
+import '../services/api_service.dart';
+import 'transpose_result_screen.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 
+/// A screen that processes and displays the transposition of a music sheet.
+///
+/// Handles API communication, progress feedback, and error dialogs.
+/// Optimized for screen readers and accessibility.
 class TransposingScreen extends StatefulWidget {
+  /// Raw XML content of the original sheet music.
   final String xmlContent;
+
+  /// The original key signature.
   final String originalKey;
+
+  /// The target key signature after transposition.
   final String transposedKey;
+
+  /// The name of the song being transposed.
   final String songName;
 
+  /// Creates a [TransposingScreen].
   const TransposingScreen({
     Key? key,
     required this.xmlContent,
@@ -34,9 +45,9 @@ class _TransposingScreenState extends State<TransposingScreen> {
     _startTransposition();
   }
 
+  /// Initiates the transposition request to backend service.
   Future<void> _startTransposition() async {
     if (!mounted) return;
-
     setState(() => _isTransposing = true);
 
     try {
@@ -58,12 +69,13 @@ class _TransposingScreenState extends State<TransposingScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => TransposeResultScreen(
-            transposedXml: result,
-            originalKey: widget.originalKey,
-            transposedKey: widget.transposedKey,
-            songName: widget.songName,
-          ),
+          builder:
+              (_) => TransposeResultScreen(
+                transposedXml: result,
+                originalKey: widget.originalKey,
+                transposedKey: widget.transposedKey,
+                songName: widget.songName,
+              ),
         ),
       );
     } catch (e) {
@@ -77,45 +89,59 @@ class _TransposingScreenState extends State<TransposingScreen> {
     }
   }
 
+  /// Displays an accessible error dialog based on the type of failure.
   void _showErrorDialog(dynamic error) {
     String title = "Uh-oh, transposition failed!";
-    String message = "Looks like we hit a wrong note. Try again or double-check your file.";
+    String message =
+        "Looks like we hit a wrong note. Try again or double-check your file.";
 
     if (error.toString().contains('SocketException')) {
-      title = "Uh-oh! We couldn’t process your request.";
-      message = "There was an issue sending your request. Check your internet connection and try again.";
-    } else if (error.toString().contains('500') || error.toString().contains('Internal Server Error')) {
-      title = "Oops! Something went wrong on our end.";
-      message = "We couldn’t complete the transposition due to a system error. Please try again later.";
+      title = "No Internet Connection";
+      message =
+          "We couldn't send your request. Please check your internet and try again.";
+    } else if (error.toString().contains('500') ||
+        error.toString().contains('Internal Server Error')) {
+      title = "Server Error";
+      message = "Something went wrong on our end. Please try again later.";
     }
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Go back to previous screen
-            },
-            child: const Text("Cancel", style: TextStyle(color: Color.fromARGB(255, 98, 85, 139))),
+      builder:
+          (_) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Semantics(
+              header: true,
+              child: Text(title, style: AppTextStyles.bodyMedium),
+            ),
+            content: Semantics(
+              liveRegion: true,
+              child: Text(message, style: AppTextStyles.bodyText),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                },
+                child: const Text("Cancel", style: AppTextStyles.primaryAction),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _startTransposition();
+                },
+                child: const Text("Retry", style: AppTextStyles.primaryAction),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              _startTransposition();   // Retry
-            },
-            child: const Text("Retry", style: TextStyle(color: Color.fromARGB(255, 98, 85, 139))),
-          ),
-        ],
-      ),
     );
   }
 
+  /// Calculates semitone interval difference between two keys.
   int _calculateInterval(String originalKey, String transposedKey) {
     final keyMap = {
       "C": 0,
@@ -132,40 +158,65 @@ class _TransposingScreenState extends State<TransposingScreen> {
       "Bb": 10,
       "B": 11,
     };
-    int start = keyMap[originalKey.replaceAll(' major', '').replaceAll(' minor', '')] ?? 0;
-    int end = keyMap[transposedKey.replaceAll(' major', '').replaceAll(' minor', '')] ?? 0;
+    int start =
+        keyMap[originalKey.replaceAll(' major', '').replaceAll(' minor', '')] ??
+        0;
+    int end =
+        keyMap[transposedKey
+            .replaceAll(' major', '')
+            .replaceAll(' minor', '')] ??
+        0;
     return end - start;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text("Transposing...", style: TextStyle(fontSize: 22)),
-            const SizedBox(height: 32),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 40),
-              child: LinearProgressIndicator(
-                minHeight: 5,
-                backgroundColor: Color.fromARGB(50, 98, 85, 139),
-                valueColor: AlwaysStoppedAnimation(
-                  Color.fromARGB(255, 98, 85, 139),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Semantics(
+                header: true,
+                label: "Transposing your music sheet",
+                child: const Text(
+                  "Transposing...",
+                  style: AppTextStyles.largeHeading,
                 ),
               ),
-            ),
-            const SizedBox(height: 32),
-            OutlinedButton(
-              onPressed: _isTransposing ? null : () => Navigator.pop(context),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              const SizedBox(height: 32),
+              Semantics(
+                label: "Loading progress indicator",
+                value: "Processing",
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 40),
+                  child: LinearProgressIndicator(
+                    minHeight: 5,
+                    backgroundColor: Color.fromARGB(50, 98, 85, 139),
+                    valueColor: AlwaysStoppedAnimation(AppColors.primaryPurple),
+                  ),
+                ),
               ),
-              child: const Text("Cancel"),
-            ),
-          ],
+              const SizedBox(height: 32),
+              Semantics(
+                button: true,
+                label: "Cancel transposition and go back",
+                child: OutlinedButton(
+                  onPressed:
+                      _isTransposing ? null : () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                  ),
+                  child: const Text("Cancel"),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

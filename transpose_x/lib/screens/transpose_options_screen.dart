@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
 import 'key_info_screen.dart';
 import 'transposing_screen.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
+import 'package:flutter/gestures.dart';
 
+/// A screen that displays the detected key signature and allows the user
+/// to select a new key to transpose their sheet music.
+///
+/// Accessible with screen readers and button semantics.
 class TransposeOptionsScreen extends StatefulWidget {
+  /// The originally detected key of the uploaded sheet music.
   final String originalKey;
+
+  /// The raw XML content of the uploaded sheet music.
   final String xmlContent;
 
+  /// Creates a [TransposeOptionsScreen].
   const TransposeOptionsScreen({
     required this.originalKey,
     required this.xmlContent,
@@ -17,11 +28,19 @@ class TransposeOptionsScreen extends StatefulWidget {
 }
 
 class _TransposeOptionsScreenState extends State<TransposeOptionsScreen> {
+  /// The key currently selected for transposition.
   late String currentKey;
+
+  /// The current index in the sharp/flat key lists.
   late int currentIndex;
+
+  /// Whether the current key is minor.
   late bool isMinor;
+
+  /// Whether to display keys using sharps (♯) or flats (♭).
   bool showSharps = true;
 
+  /// List of keys using sharps.
   final List<String> sharpKeys = [
     "C",
     "C#",
@@ -37,6 +56,7 @@ class _TransposeOptionsScreenState extends State<TransposeOptionsScreen> {
     "B",
   ];
 
+  /// List of keys using flats.
   final List<String> flatKeys = [
     "C",
     "D♭",
@@ -58,6 +78,7 @@ class _TransposeOptionsScreenState extends State<TransposeOptionsScreen> {
     _initializeKeyState(widget.originalKey);
   }
 
+  /// Initializes key signature state from the detected key.
   void _initializeKeyState(String key) {
     final parts = key.split(' ');
     final base = parts[0];
@@ -77,11 +98,13 @@ class _TransposeOptionsScreenState extends State<TransposeOptionsScreen> {
     _updateCurrentKey();
   }
 
+  /// Updates the currently selected key string.
   void _updateCurrentKey() {
     final keyList = showSharps ? sharpKeys : flatKeys;
     currentKey = keyList[currentIndex] + (isMinor ? " minor" : " major");
   }
 
+  /// Moves the key up by a half-step.
   void _transposeUp() {
     setState(() {
       currentIndex = (currentIndex + 1) % sharpKeys.length;
@@ -89,6 +112,7 @@ class _TransposeOptionsScreenState extends State<TransposeOptionsScreen> {
     });
   }
 
+  /// Moves the key down by a half-step.
   void _transposeDown() {
     setState(() {
       currentIndex = (currentIndex - 1 + sharpKeys.length) % sharpKeys.length;
@@ -96,184 +120,208 @@ class _TransposeOptionsScreenState extends State<TransposeOptionsScreen> {
     });
   }
 
+  /// Handles transposition confirmation and navigates to the next screen.
   void _onTransposePressed() {
-  final original = widget.originalKey.trim().toLowerCase();
-  final selected = currentKey.trim().toLowerCase();
+    final original = widget.originalKey.trim().toLowerCase();
+    final selected = currentKey.trim().toLowerCase();
 
-  if (original == selected) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Oops! That’s the same key. Try transposing to spice things up 🎶"),
-        backgroundColor: Color.fromARGB(255, 98, 85, 139),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  } else {
-    Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (_) => TransposingScreen(
-      xmlContent: widget.xmlContent,
-      originalKey: widget.originalKey,
-      transposedKey: currentKey,
-      songName: "Uploaded Sheet",
-    ),
-  ),
-);
+    if (original == selected) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            "Oops! That’s the same key. Try transposing to spice things up 🎶",
+            style: AppTextStyles.bodyText,
+          ),
+          backgroundColor: AppColors.primaryPurple,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (_) => TransposingScreen(
+                xmlContent: widget.xmlContent,
+                originalKey: widget.originalKey,
+                transposedKey: currentKey,
+                songName: "Uploaded Sheet",
+              ),
+        ),
+      );
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(""),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.accent,
         elevation: 0,
+        title: Semantics(
+          label: 'Transpose Options Screen',
+          child: SizedBox.shrink(),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 30),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // TOP — Key detection result
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
+                const Text(
                   "Detection Successful!",
-                  style: TextStyle(fontSize: 18),
+                  style: AppTextStyles.subHeading,
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 20),
                 Text(
                   "It looks like your sheet is in ${widget.originalKey}.",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: AppTextStyles.bodyText.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 6),
+                const SizedBox(height: 6),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Wrap(
-                    alignment: WrapAlignment.center,
-                    children: [
-                      Text(
-                        "* We only detect the dominant key. For more info, ",
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => KeyInfoScreen()),
-                          );
-                        },
-                        child: Text(
-                          "learn more here.",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Color.fromARGB(255, 98, 85, 139),
-                            decoration: TextDecoration.underline,
-                          ),
+                  child: RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      style: AppTextStyles.bodySmall, // base style
+                      children: [
+                        const TextSpan(
+                          text: "* We detect the dominant key. For more info, ",
                         ),
-                      ),
-                    ],
+                        TextSpan(
+                          text: "learn more here.",
+                          style: AppTextStyles.linkText,
+                          recognizer:
+                              TapGestureRecognizer()
+                                ..onTap = () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const KeyInfoScreen(),
+                                    ),
+                                  );
+                                },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
-
-            // CENTER — Transpose controls
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(top: 100),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Toggle buttons
+                    // Sharp/Flat toggle
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text("Show as: "),
-                        SizedBox(width: 6),
-                        ChoiceChip(
-                          label: Text("♯"),
-                          selected: showSharps,
-                          onSelected: (_) {
-                            setState(() {
-                              showSharps = true;
-                              _updateCurrentKey();
-                            });
-                          },
-                        ),
-                        SizedBox(width: 8),
-                        ChoiceChip(
-                          label: Text("♭"),
-                          selected: !showSharps,
-                          onSelected: (_) {
-                            setState(() {
-                              showSharps = false;
-                              _updateCurrentKey();
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 24),
-
-                    // Transpose UI
-                    Text(
-                      "Transpose Options",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          currentKey,
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
+                        const Text("Show as: ", style: AppTextStyles.bodyText),
+                        const SizedBox(width: 6),
+                        Semantics(
+                          button: true,
+                          label: 'Show sharps ♯',
+                          child: ChoiceChip(
+                            label: const Text("♯"),
+                            selected: showSharps,
+                            onSelected: (_) {
+                              setState(() {
+                                showSharps = true;
+                                _updateCurrentKey();
+                              });
+                            },
+                            selectedColor: AppColors.secondaryPurple,
                           ),
                         ),
-                        SizedBox(width: 20),
-                        IconButton(
-                          onPressed: _transposeUp,
-                          icon: Icon(Icons.add_circle_outline),
-                          color: Color.fromARGB(255, 98, 85, 139),
-                        ),
-                        IconButton(
-                          onPressed: _transposeDown,
-                          icon: Icon(Icons.remove_circle_outline),
-                          color: Color.fromARGB(255, 98, 85, 139),
+                        const SizedBox(width: 8),
+                        Semantics(
+                          button: true,
+                          label: 'Show flats ♭',
+                          child: ChoiceChip(
+                            label: const Text("♭"),
+                            selected: !showSharps,
+                            onSelected: (_) {
+                              setState(() {
+                                showSharps = false;
+                                _updateCurrentKey();
+                              });
+                            },
+                            selectedColor: AppColors.secondaryPurple,
+                          ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 32),
-                    ElevatedButton(
-                      onPressed: _onTransposePressed,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromARGB(255, 98, 85, 139),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 50,
-                          vertical: 14,
+                    const SizedBox(height: 24),
+                    const Text(
+                      "Transpose Options",
+                      style: AppTextStyles.bodyMedium,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Semantics(
+                          label: 'Currently selected key: $currentKey',
+                          child: Text(
+                            currentKey,
+                            style: AppTextStyles.sectionHeading,
+                          ),
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                        const SizedBox(width: 20),
+                        Semantics(
+                          button: true,
+                          label: 'Transpose up by half-step',
+                          child: IconButton(
+                            onPressed: _transposeUp,
+                            icon: const Icon(Icons.add_circle_outline),
+                            color: AppColors.primaryPurple,
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        "Transpose",
-                        style: TextStyle(color: Colors.white, fontSize: 16),
+                        Semantics(
+                          button: true,
+                          label: 'Transpose down by half-step',
+                          child: IconButton(
+                            onPressed: _transposeDown,
+                            icon: const Icon(Icons.remove_circle_outline),
+                            color: AppColors.primaryPurple,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    Semantics(
+                      button: true,
+                      label: 'Confirm transposition',
+                      child: ElevatedButton(
+                        onPressed: _onTransposePressed,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryPurple,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 50,
+                            vertical: 14,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        child: const Text(
+                          "Transpose",
+                          style: AppTextStyles.primaryButton,
+                        ),
                       ),
                     ),
                   ],

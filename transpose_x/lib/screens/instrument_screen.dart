@@ -1,16 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 import 'home_screen.dart';
 import 'saved_screen.dart';
 
+/// A screen that allows users to add, view, and manage their musical instruments.
+///
+/// The list of instruments is saved locally using SharedPreferences.
 class InstrumentScreen extends StatefulWidget {
+  /// Creates an instance of [InstrumentScreen].
+  const InstrumentScreen({super.key});
+
   @override
   _InstrumentScreenState createState() => _InstrumentScreenState();
 }
 
 class _InstrumentScreenState extends State<InstrumentScreen> {
+  /// Controller for the instrument input text field.
   final TextEditingController _instrumentController = TextEditingController();
+
+  /// The list of instruments entered by the user.
   List<String> _instruments = [];
 
   @override
@@ -19,6 +29,7 @@ class _InstrumentScreenState extends State<InstrumentScreen> {
     _loadCachedInstruments();
   }
 
+  /// Loads cached instruments from SharedPreferences.
   Future<void> _loadCachedInstruments() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -26,11 +37,13 @@ class _InstrumentScreenState extends State<InstrumentScreen> {
     });
   }
 
+  /// Saves the current list of instruments to SharedPreferences.
   Future<void> _saveInstrumentsToCache() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList('instruments', _instruments);
   }
 
+  /// Adds a new instrument to the list.
   void _addInstrument() {
     final instrument = _instrumentController.text.trim();
     if (instrument.isNotEmpty) {
@@ -42,6 +55,7 @@ class _InstrumentScreenState extends State<InstrumentScreen> {
     }
   }
 
+  /// Deletes an instrument at the specified index.
   void _deleteInstrument(int index) {
     setState(() {
       _instruments.removeAt(index);
@@ -59,92 +73,119 @@ class _InstrumentScreenState extends State<InstrumentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
-        foregroundColor: Colors.black,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+        foregroundColor: AppColors.accent,
+        leading: Semantics(
+          label: "Back to previous screen",
+          button: true,
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
         ),
-        title: Text(
-          "Back",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-        ),
+        title: const Text("Back", style: AppTextStyles.bodyMedium),
         centerTitle: false,
       ),
       body: Padding(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Instrument", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-            SizedBox(height: 5),
-            TextField(
-              controller: _instrumentController,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
+            const Text("Instrument", style: AppTextStyles.bodyMedium),
+            const SizedBox(height: 5),
+            Semantics(
+              label: "Enter the name of an instrument",
+              child: TextField(
+                controller: _instrumentController,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: AppColors.subtitleGrey),
+                  ),
+                  filled: true,
+                  fillColor: AppColors.background,
+                  hintText: "e.g., Violin",
+                  hintStyle: AppTextStyles.bodyText,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
                 ),
-                filled: true,
-                fillColor: Colors.white,
-                hintText: "Value",
-                contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 15),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Center(
-              child: ElevatedButton(
-                onPressed: _addInstrument,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Color.fromARGB(255, 98, 85, 139),
-                  side: BorderSide(color: Color.fromARGB(255, 98, 85, 139)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+              child: Semantics(
+                label: "Button to add a new instrument",
+                button: true,
+                child: ElevatedButton(
+                  onPressed: _addInstrument,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.background,
+                    foregroundColor: AppColors.primaryPurple,
+                    side: const BorderSide(color: AppColors.primaryPurple),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  child: const Text(
+                    "Add an Instrument",
+                    style: AppTextStyles.primaryAction,
                   ),
                 ),
-                child: Text("Add an Instrument"),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Expanded(
-              child: ListView.builder(
-                itemCount: _instruments.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                    margin: EdgeInsets.symmetric(vertical: 5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: ListTile(
-                      title: Text(_instruments[index]),
-                      trailing: IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _deleteInstrument(index),
+              child: Semantics(
+                label: "List of saved instruments",
+                child: ListView.builder(
+                  itemCount: _instruments.length,
+                  itemBuilder: (context, index) {
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                    ),
-                  );
-                },
+                      child: ListTile(
+                        title: Text(
+                          _instruments[index],
+                          style: AppTextStyles.bodyText,
+                        ),
+                        trailing: Semantics(
+                          label: "Delete ${_instruments[index]}",
+                          button: true,
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.delete,
+                              color: AppColors.warningRed,
+                            ),
+                            onPressed: () => _deleteInstrument(index),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 2,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: "Saved"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-        ],
-        selectedItemColor: Color.fromARGB(255, 98, 85, 139),
-        unselectedItemColor: Colors.grey,
-        onTap: (index) async {
+      bottomNavigationBar: Semantics(
+        label: "Bottom navigation with Home, Saved, and Profile options",
+        child: BottomNavigationBar(
+          currentIndex: 2,
+          selectedItemColor: AppColors.primaryPurple,
+          unselectedItemColor: AppColors.subtitleGrey,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+            BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: "Saved"),
+            BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+          ],
+          onTap: (index) async {
           await _saveInstrumentsToCache();
           if (index == 0) {
             Navigator.pushReplacement(
@@ -158,6 +199,7 @@ class _InstrumentScreenState extends State<InstrumentScreen> {
             );
           }
         },
+        ),
       ),
     );
   }
