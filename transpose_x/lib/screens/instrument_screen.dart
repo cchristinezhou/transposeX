@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import 'home_screen.dart';
+import 'saved_screen.dart';
 
 /// A screen that allows users to add, view, and manage their musical instruments.
 ///
@@ -63,6 +65,7 @@ class _InstrumentScreenState extends State<InstrumentScreen> {
 
   @override
   void dispose() {
+    _saveInstrumentsToCache();
     _instrumentController.dispose();
     super.dispose();
   }
@@ -182,6 +185,20 @@ class _InstrumentScreenState extends State<InstrumentScreen> {
             BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: "Saved"),
             BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
           ],
+          onTap: (index) async {
+          await _saveInstrumentsToCache();
+          if (index == 0) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => HomeScreen()),
+            );
+          } else if (index == 1) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => SavedScreen()),
+            );
+          }
+        },
         ),
       ),
     );

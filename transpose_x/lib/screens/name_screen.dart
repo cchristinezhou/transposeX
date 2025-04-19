@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import 'home_screen.dart';
+import 'saved_screen.dart';
 
 /// A screen where users can input and save their full name.
 ///
@@ -51,6 +53,7 @@ class _NameScreenState extends State<NameScreen> {
 
   @override
   void dispose() {
+    _saveNamesToCache();
     _firstNameController.dispose();
     _middleNameController.dispose();
     _lastNameController.dispose();
@@ -99,6 +102,20 @@ class _NameScreenState extends State<NameScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: "Saved"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
+        onTap: (index) {
+          _saveNamesToCache();
+          if (index == 0) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => HomeScreen()),
+            );
+          } else if (index == 1) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => SavedScreen()),
+            );
+          }
+        },
       ),
     );
   }

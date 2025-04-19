@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import 'home_screen.dart';
+import 'saved_screen.dart';
 
 /// A screen where the user can select and save their age.
 ///
@@ -38,6 +40,12 @@ class _AgeScreenState extends State<AgeScreen> {
     if (_selectedAge != null) {
       await prefs.setInt('age', _selectedAge!);
     }
+  }
+
+  @override
+  void dispose() {
+    _saveAgeToCache();
+    super.dispose();
   }
 
   @override
@@ -147,6 +155,20 @@ class _AgeScreenState extends State<AgeScreen> {
             tooltip: "Go to Profile screen",
           ),
         ],
+        onTap: (index) async {
+          await _saveAgeToCache();
+          if (index == 0) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => HomeScreen()),
+            );
+          } else if (index == 1) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => SavedScreen()),
+            );
+          }
+        },
       ),
     );
   }
