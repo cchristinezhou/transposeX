@@ -145,7 +145,6 @@ class _NameScreenState extends State<NameScreen> {
               filled: true,
               fillColor: AppColors.background,
               hintText: "Value",
-              hintStyle: AppTextStyles.bodyText,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 10,
                 vertical: 15,
