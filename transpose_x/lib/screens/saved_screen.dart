@@ -6,7 +6,7 @@ import 'view_sheet_screen.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
-/// A screen that displays the list of saved sheet music,
+/// A screen that displays a list of saved sheet music,
 /// allowing users to rename, download, and share their sheets.
 class SavedScreen extends StatefulWidget {
   /// Creates a [SavedScreen].
@@ -17,7 +17,10 @@ class SavedScreen extends StatefulWidget {
 }
 
 class _SavedScreenState extends State<SavedScreen> {
+  /// List of saved songs retrieved from the backend.
   List<Map<String, dynamic>> savedSongs = [];
+
+  /// Whether the songs are currently being loaded.
   bool isLoading = true;
 
   @override
@@ -26,6 +29,7 @@ class _SavedScreenState extends State<SavedScreen> {
     fetchSavedSongs();
   }
 
+  /// Fetches the saved songs from the backend API.
   Future<void> fetchSavedSongs() async {
     try {
       final rawSongs = await ApiService.getSavedSongs();
@@ -49,6 +53,7 @@ class _SavedScreenState extends State<SavedScreen> {
                 },
               )
               .toList();
+
       if (mounted) {
         setState(() {
           savedSongs = songs;
@@ -61,6 +66,7 @@ class _SavedScreenState extends State<SavedScreen> {
     }
   }
 
+  /// Shows a dialog allowing the user to rename a saved song.
   void _showRenameDialog(BuildContext parentContext, int index) {
     final TextEditingController _controller = TextEditingController(
       text: savedSongs[index]["name"] ?? "Untitled",
@@ -125,6 +131,7 @@ class _SavedScreenState extends State<SavedScreen> {
     );
   }
 
+  /// Shows a bottom sheet menu with options for a specific saved song.
   void _showOptionsMenu(BuildContext context, int index) {
     final song = savedSongs[index];
 
@@ -155,12 +162,13 @@ class _SavedScreenState extends State<SavedScreen> {
                     Navigator.pop(sheetContext);
                     final file = await saveXmlFile(song["xml"]);
                     await saveToDownloads(file);
-                    if (mounted)
+                    if (mounted) {
                       _showSnackBar(
                         scaffoldContext,
                         "✅ Download successful!",
                         true,
                       );
+                    }
                   },
                 ),
                 _buildOptionTile(
@@ -177,6 +185,7 @@ class _SavedScreenState extends State<SavedScreen> {
     );
   }
 
+  /// Builds a tile used inside the bottom sheet options menu.
   Widget _buildOptionTile({
     required IconData icon,
     required String label,
@@ -189,6 +198,7 @@ class _SavedScreenState extends State<SavedScreen> {
     );
   }
 
+  /// Shows a [SnackBar] for success or error messages.
   void _showSnackBar(BuildContext context, String message, bool isSuccess) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -243,41 +253,45 @@ class _SavedScreenState extends State<SavedScreen> {
                       ),
                   itemBuilder: (context, index) {
                     final song = savedSongs[index];
-                    return ListTile(
-                      onTap: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (_) => ViewSheetScreen(
-                                  xmlContent: song["xml"] ?? "",
-                                  keySignature:
-                                      song["transposedKey"] ?? "Unknown",
-                                  fileName: song["name"] ?? "Untitled",
-                                ),
-                          ),
-                        );
-                        fetchSavedSongs(); // Refresh after editing
-                      },
-                      leading: const Icon(
-                        Icons.description,
-                        size: 28,
-                        color: AppColors.accent,
-                      ),
-                      title: Text(
-                        song["name"] ?? "Untitled",
-                        style: AppTextStyles.bodyMedium,
-                      ),
-                      subtitle: Text(
-                        song["transposedKey"] ?? "Unknown",
-                        style: AppTextStyles.bodySmall,
-                      ),
-                      trailing: IconButton(
-                        icon: const Icon(
-                          Icons.more_vert,
-                          color: AppColors.subtitleGrey,
+                    return Semantics(
+                      label: "Saved song: ${song["name"]}",
+                      button: true,
+                      child: ListTile(
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (_) => ViewSheetScreen(
+                                    xmlContent: song["xml"] ?? "",
+                                    keySignature:
+                                        song["transposedKey"] ?? "Unknown",
+                                    fileName: song["name"] ?? "Untitled",
+                                  ),
+                            ),
+                          );
+                          fetchSavedSongs(); // Refresh list
+                        },
+                        leading: const Icon(
+                          Icons.description,
+                          size: 28,
+                          color: AppColors.accent,
                         ),
-                        onPressed: () => _showOptionsMenu(context, index),
+                        title: Text(
+                          song["name"] ?? "Untitled",
+                          style: AppTextStyles.bodyMedium,
+                        ),
+                        subtitle: Text(
+                          song["transposedKey"] ?? "Unknown",
+                          style: AppTextStyles.bodySmall,
+                        ),
+                        trailing: IconButton(
+                          icon: const Icon(
+                            Icons.more_vert,
+                            color: AppColors.subtitleGrey,
+                          ),
+                          onPressed: () => _showOptionsMenu(context, index),
+                        ),
                       ),
                     );
                   },

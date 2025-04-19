@@ -7,12 +7,14 @@ import 'home_screen.dart';
 import 'view_sheet_screen.dart';
 import '../utils/file_export.dart';
 import '../services/api_service.dart';
+import 'package:share_plus/share_plus.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
 /// A screen that displays the result of a successful transposition.
 ///
-/// Provides options to view, download, save, or share the transposed sheet music.
+/// Provides options to view, download, save to library, or share the transposed sheet music.
+/// Fully accessible with screen reader labels.
 class TransposeResultScreen extends StatefulWidget {
   /// The transposed MusicXML content.
   final String transposedXml;
@@ -20,7 +22,7 @@ class TransposeResultScreen extends StatefulWidget {
   /// The original key signature.
   final String originalKey;
 
-  /// The new, transposed key signature.
+  /// The newly transposed key signature.
   final String transposedKey;
 
   /// The name of the song.
@@ -42,7 +44,6 @@ class TransposeResultScreen extends StatefulWidget {
 class _TransposeResultScreenState extends State<TransposeResultScreen> {
   late final WebViewController _controller;
   final GlobalKey previewContainer = GlobalKey();
-
   int? _xmlSize;
   bool _showPreview = false;
 
@@ -53,34 +54,40 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
     _generateExportFiles();
   }
 
+  /// Initializes the embedded WebView with HTML content.
   void _initializeViewer() {
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(NavigationDelegate(
-        onPageFinished: (_) => _loadXml(),
-      ));
+    _controller =
+        WebViewController()
+          ..setJavaScriptMode(JavaScriptMode.unrestricted)
+          ..setNavigationDelegate(
+            NavigationDelegate(onPageFinished: (_) => _loadXml()),
+          );
     _loadViewerHtml();
   }
 
+  /// Loads the local HTML viewer page.
   Future<void> _loadViewerHtml() async {
     final html = await rootBundle.loadString('assets/viewer.html');
-    final encodedHtml = Uri.dataFromString(
-      html,
-      mimeType: 'text/html',
-      encoding: Encoding.getByName('utf-8'),
-    ).toString();
+    final encodedHtml =
+        Uri.dataFromString(
+          html,
+          mimeType: 'text/html',
+          encoding: Encoding.getByName('utf-8'),
+        ).toString();
     _controller.loadRequest(Uri.parse(encodedHtml));
   }
 
+  /// Injects the MusicXML content into the WebView.
   Future<void> _loadXml() async {
     final encoded = base64Encode(utf8.encode(widget.transposedXml));
     final script = """
       const xmlStr = atob('$encoded');
       window.postMessage({ type: 'loadXml', xml: xmlStr });
     """;
-    _controller.runJavaScript(script);
+    await _controller.runJavaScript(script);
   }
 
+  /// Prepares temporary files for export/download.
   Future<void> _generateExportFiles() async {
     final directory = await getTemporaryDirectory();
     final xmlFile = await saveXmlFile(widget.transposedXml, directory);
@@ -123,6 +130,7 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
     );
   }
 
+  /// Sheet music preview for screenshot/export purposes.
   Widget _buildSheetPreview() {
     return Container(
       padding: const EdgeInsets.all(24),
@@ -136,10 +144,10 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.music_note, size: 48, color: AppColors.primaryPurple),
-          const SizedBox(height: 24),
-          const Text(
+        children: const [
+          Icon(Icons.music_note, size: 48, color: AppColors.primaryPurple),
+          SizedBox(height: 24),
+          Text(
             "Transposition successful! You can now download or share your sheet.",
             style: AppTextStyles.bodySmall,
             textAlign: TextAlign.center,
@@ -149,49 +157,57 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
     );
   }
 
+  /// Options for user actions like View, Save, Download, Share.
   Widget _buildOptions() {
     return Column(
       children: [
-        _buildButton(Icons.remove_red_eye_outlined, "View", _handleView),
+        _buildButton(Icons.remove_red_eye_outlined, "View Sheet", _handleView),
         _buildButton(Icons.save_alt, "Save to Library", _handleSaveToLibrary),
         _buildButton(Icons.download, "Download XML", _downloadXml),
         _buildButton(Icons.share, "Share XML", _handleShareXml),
-        _buildButton(Icons.music_note, "Transpose Another One?", _handleTransposeAnother),
+        _buildButton(
+          Icons.music_note,
+          "Transpose Another",
+          _handleTransposeAnother,
+        ),
         const SizedBox(height: 32),
       ],
     );
   }
 
+  /// Builds a single action button with A11Y enhancements.
   Widget _buildButton(IconData icon, String label, VoidCallback onPressed) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0),
-      child: SizedBox(
-        width: 300,
-        child: ElevatedButton(
-          onPressed: onPressed,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primaryPurple,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: AppColors.background),
-              const SizedBox(width: 10),
-              Text(
-                label,
-                style: AppTextStyles.primaryButton,
+    return Semantics(
+      button: true,
+      label: label,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6.0),
+        child: SizedBox(
+          width: 300,
+          child: ElevatedButton(
+            onPressed: onPressed,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryPurple,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
               ),
-            ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, color: AppColors.background),
+                const SizedBox(width: 10),
+                Text(label, style: AppTextStyles.primaryButton),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
+  /// Opens the full sheet music preview screen.
   void _handleView() {
     if (_xmlSize == null) {
       _showSnackBar("❗ No XML content available.", false);
@@ -200,80 +216,92 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ViewSheetScreen(
-          keySignature: widget.transposedKey,
-          xmlContent: widget.transposedXml,
-          fileName: widget.songName ?? "Untitled Song",
-        ),
+        builder:
+            (_) => ViewSheetScreen(
+              keySignature: widget.transposedKey,
+              xmlContent: widget.transposedXml,
+              fileName: widget.songName ?? "Untitled Song",
+            ),
       ),
     );
   }
 
+  /// Prompts the user to save the transposed sheet into their library.
   void _handleSaveToLibrary() {
     final TextEditingController controller = TextEditingController();
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text("Name your sheet", style: AppTextStyles.bodyMedium),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: "e.g. My Transposed Song"),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text("Cancel", style: AppTextStyles.primaryAction),
+      builder:
+          (dialogContext) => AlertDialog(
+            title: const Text(
+              "Name your sheet",
+              style: AppTextStyles.bodyMedium,
+            ),
+            content: TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                hintText: "e.g. My Transposed Song",
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text("Cancel", style: AppTextStyles.primaryAction),
+              ),
+              TextButton(
+                onPressed: () async {
+                  final name = controller.text.trim();
+                  Navigator.pop(dialogContext);
+
+                  if (name.isEmpty) {
+                    _showSnackBar("❗ Please enter a name.", false);
+                    return;
+                  }
+
+                  final success = await ApiService.saveSongToDatabase(
+                    name: name,
+                    xml: widget.transposedXml,
+                    originalKey: widget.originalKey,
+                    transposedKey: widget.transposedKey,
+                  );
+
+                  if (!mounted) return;
+                  _showSnackBar(
+                    success
+                        ? "Saved to library as \"$name\""
+                        : "Failed to save. Try again.",
+                    success,
+                  );
+                },
+                child: const Text("Save", style: AppTextStyles.primaryAction),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () async {
-              final name = controller.text.trim();
-              Navigator.pop(dialogContext);
-
-              if (name.isEmpty) {
-                _showSnackBar("❗ Please enter a name.", false);
-                return;
-              }
-
-              final success = await ApiService.saveSongToDatabase(
-                name: name,
-                xml: widget.transposedXml,
-                originalKey: widget.originalKey,
-                transposedKey: widget.transposedKey,
-              );
-
-              if (!mounted) return;
-              _showSnackBar(
-                success
-                    ? "✅ Saved to library as \"$name\""
-                    : "❌ Failed to save. Try again.",
-                success,
-              );
-            },
-            child: const Text("Save", style: AppTextStyles.primaryAction),
-          ),
-        ],
-      ),
     );
   }
 
+  /// Shares the XML content.
   void _handleShareXml() {
     shareXmlContent(widget.transposedXml);
   }
 
+  /// Returns to HomeScreen to start a new transposition.
   void _handleTransposeAnother() {
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (_) => HomeScreen()),
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
       (route) => false,
     );
   }
 
+  /// Downloads the transposed XML to device.
   void _downloadXml() async {
     final file = await saveXmlFile(widget.transposedXml);
     await saveToDownloads(file);
     _showSnackBar("✅ Download successful!", true);
   }
 
+  /// Shows a custom snackbar.
   void _showSnackBar(String message, bool isSuccess) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -281,13 +309,14 @@ class _TransposeResultScreenState extends State<TransposeResultScreen> {
           children: [
             Icon(
               isSuccess ? Icons.check_circle_outline : Icons.error_outline,
-              color: AppColors.background,
+              color: Colors.white,
             ),
             const SizedBox(width: 12),
             Expanded(child: Text(message)),
           ],
         ),
-        backgroundColor: isSuccess ? AppColors.successGreen : AppColors.warningRed,
+        backgroundColor:
+            isSuccess ? AppColors.successGreen : AppColors.warningRed,
         duration: const Duration(seconds: 2),
       ),
     );

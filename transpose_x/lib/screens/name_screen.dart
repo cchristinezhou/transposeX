@@ -3,11 +3,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
-/// A screen where users can input and save their names.
+/// A screen where users can input and save their full name.
 ///
-/// Stores first, middle, and last names locally using SharedPreferences.
+/// Stores the first, middle, and last name locally using [SharedPreferences].
+/// Improves user profile personalization within the app.
 class NameScreen extends StatefulWidget {
-  /// Creates a [NameScreen].
+  /// Creates an instance of [NameScreen].
   const NameScreen({super.key});
 
   @override
@@ -15,8 +16,13 @@ class NameScreen extends StatefulWidget {
 }
 
 class _NameScreenState extends State<NameScreen> {
+  /// Controller for the first name input field.
   final TextEditingController _firstNameController = TextEditingController();
+
+  /// Controller for the middle name input field.
   final TextEditingController _middleNameController = TextEditingController();
+
+  /// Controller for the last name input field.
   final TextEditingController _lastNameController = TextEditingController();
 
   @override
@@ -25,6 +31,7 @@ class _NameScreenState extends State<NameScreen> {
     _loadCachedNames();
   }
 
+  /// Loads cached name data from local storage if available.
   Future<void> _loadCachedNames() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -34,6 +41,7 @@ class _NameScreenState extends State<NameScreen> {
     });
   }
 
+  /// Saves the current name fields into local storage.
   Future<void> _saveNamesToCache() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('firstName', _firstNameController.text);
@@ -57,12 +65,16 @@ class _NameScreenState extends State<NameScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         foregroundColor: AppColors.accent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () async {
-            await _saveNamesToCache();
-            Navigator.pop(context);
-          },
+        leading: Semantics(
+          label: "Back to previous screen",
+          button: true,
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () async {
+              await _saveNamesToCache();
+              Navigator.pop(context);
+            },
+          ),
         ),
         title: const Text("Back", style: AppTextStyles.bodyMedium),
         centerTitle: false,
@@ -91,13 +103,20 @@ class _NameScreenState extends State<NameScreen> {
     );
   }
 
+  /// Builds a labeled text field with accessibility support.
+  ///
+  /// [label] is the field description, [controller] handles the input text.
   Widget _buildTextField(String label, TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: AppTextStyles.bodyMedium),
+          Semantics(
+            label: "$label input field",
+            textField: true,
+            child: Text(label, style: AppTextStyles.bodyMedium),
+          ),
           const SizedBox(height: 5),
           TextField(
             controller: controller,

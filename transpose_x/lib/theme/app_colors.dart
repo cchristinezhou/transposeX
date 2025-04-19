@@ -5,6 +5,9 @@ class AppColors {
   /// Primary brand color (purple shade).
   static const Color primaryPurple = Color(0xFF62558B);
 
+  /// Color used for text and icons in the app.
+  static const Color secondaryPurple = Color(0xFF9B8CC7);
+
   /// Default background color.
   static const Color background = Colors.white;
 
@@ -21,5 +24,5 @@ class AppColors {
   static const Color offWhite = Color.fromARGB(255, 243, 237, 246);
 
   /// Color used for disabled or inactive elements.
-  static const Color subtitleGrey = Colors.grey;
+  static const Color subtitleGrey = Color.fromARGB(255, 67, 67, 67);
 }

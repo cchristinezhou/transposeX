@@ -8,7 +8,8 @@ import '../theme/app_text_styles.dart';
 
 /// A screen that previews the uploaded MusicXML sheet for confirmation.
 ///
-/// Users can choose to proceed to key detection or reupload another file.
+/// Users can proceed to key detection or reupload another file.
+/// Accessibility optimized.
 class ViewSheetScreen extends StatefulWidget {
   /// Raw XML content of the uploaded sheet.
   final String xmlContent;
@@ -26,27 +27,24 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
   @override
   void initState() {
     super.initState();
-    _controller =
-        WebViewController()
-          ..setJavaScriptMode(JavaScriptMode.unrestricted)
-          ..setNavigationDelegate(
-            NavigationDelegate(
-              onPageFinished: (url) async {
-                print("✅ WebView finished loading: $url");
-                Future.delayed(const Duration(milliseconds: 300), () async {
-                  final script = _buildInjectionScript(widget.xmlContent);
-                  print("📦 Injecting script...");
-                  try {
-                    await _controller.runJavaScript(script);
-                    print("✅ Script injected");
-                  } catch (e) {
-                    print("❌ JavaScript injection failed: $e");
-                  }
-                });
-              },
-            ),
-          );
-
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (url) async {
+            print("✅ WebView finished loading: $url");
+            Future.delayed(const Duration(milliseconds: 300), () async {
+              final script = _buildInjectionScript(widget.xmlContent);
+              try {
+                await _controller.runJavaScript(script);
+                print("✅ Script injected");
+              } catch (e) {
+                print("❌ JavaScript injection failed: $e");
+              }
+            });
+          },
+        ),
+      );
     _loadViewerHtml();
   }
 
@@ -69,12 +67,11 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final htmlWithTimestamp = '$html<!-- $timestamp -->';
 
-    final encodedHtml =
-        Uri.dataFromString(
-          htmlWithTimestamp,
-          mimeType: 'text/html',
-          encoding: Encoding.getByName('utf-8'),
-        ).toString();
+    final encodedHtml = Uri.dataFromString(
+      htmlWithTimestamp,
+      mimeType: 'text/html',
+      encoding: Encoding.getByName('utf-8'),
+    ).toString();
 
     await _controller.loadRequest(Uri.parse(encodedHtml));
   }
@@ -88,6 +85,13 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
         elevation: 0,
         automaticallyImplyLeading: true,
         foregroundColor: AppColors.accent,
+        title: Semantics(
+          header: true,
+          child: Text(
+            'Sheet Preview',
+            style: AppTextStyles.sectionHeading,
+          ),
+        ),
       ),
       body: SafeArea(
         child: Column(
@@ -96,7 +100,10 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(top: 8.0),
-                child: WebViewWidget(controller: _controller),
+                child: Semantics(
+                  label: "Preview of uploaded sheet music",
+                  child: WebViewWidget(controller: _controller),
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -111,10 +118,7 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder:
-                              (_) => DetectKeyScreen(
-                                xmlContent: widget.xmlContent,
-                              ),
+                          builder: (_) => DetectKeyScreen(xmlContent: widget.xmlContent),
                         ),
                       );
                     },
@@ -138,18 +142,22 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
     required String label,
     required VoidCallback onPressed,
   }) {
-    return SizedBox(
-      width: 250,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryPurple,
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+    return Semantics(
+      button: true,
+      label: "Confirm the sheet and proceed",
+      child: SizedBox(
+        width: 250,
+        child: ElevatedButton(
+          onPressed: onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primaryPurple,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
           ),
+          child: Text(label, style: AppTextStyles.primaryButton),
         ),
-        child: Text(label, style: AppTextStyles.primaryButton),
       ),
     );
   }
@@ -158,18 +166,22 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
     required String label,
     required VoidCallback onPressed,
   }) {
-    return SizedBox(
-      width: 250,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: AppColors.primaryPurple),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+    return Semantics(
+      button: true,
+      label: "Reupload another sheet",
+      child: SizedBox(
+        width: 250,
+        child: OutlinedButton(
+          onPressed: onPressed,
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: AppColors.primaryPurple),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
           ),
+          child: Text(label, style: AppTextStyles.secondaryButton),
         ),
-        child: Text(label, style: AppTextStyles.secondaryButton),
       ),
     );
   }

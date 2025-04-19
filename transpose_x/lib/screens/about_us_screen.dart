@@ -14,7 +14,12 @@ class AboutUsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         /// Back button leading out of the About Us page.
-        leading: const BackButton(color: AppColors.accent),
+        leading: const Tooltip(
+          message: "Back to previous screen",
+          child: BackButton(
+            color: AppColors.accent,
+          ),
+        ),
 
         /// Title displayed in the AppBar.
         title: const Text("About Us", style: AppTextStyles.heading),
@@ -25,53 +30,61 @@ class AboutUsScreen extends StatelessWidget {
         /// No shadow under the AppBar.
         elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              SizedBox(height: 16),
+      body: Semantics(
+        label: "About Us screen",
+        explicitChildNodes: true,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 16),
 
-              /// Section heading for the mission statement.
-              Text(
-                "Empowering Music Learners",
-                style: AppTextStyles.sectionHeading,
-              ),
-              SizedBox(height: 16),
+                /// Section heading for the mission statement.
+                Semantics(
+                  header: true,
+                  child: Text(
+                    "Empowering Music Learners",
+                    style: AppTextStyles.sectionHeading,
+                  ),
+                ),
+                SizedBox(height: 16),
 
-              /// Paragraph describing why Transpose X was created.
-              Text(
-                "Transpose X was created to make sheet music more accessible, "
-                "especially for beginners and self-taught musicians. We know the struggle "
-                "of encountering a piece in an unfamiliar key — so we built a tool to make "
-                "transposition simple, fast, and friendly.",
-                style: AppTextStyles.bodyText,
-              ),
-              SizedBox(height: 16),
+                /// Paragraph describing why Transpose X was created.
+                Text(
+                  "Transpose X was created to make sheet music more accessible, "
+                  "especially for beginners and self-taught musicians. We know the struggle "
+                  "of encountering a piece in an unfamiliar key — so we built a tool to make "
+                  "transposition simple, fast, and friendly.",
+                  style: AppTextStyles.bodyText,
+                ),
+                SizedBox(height: 16),
 
-              /// Paragraph on who benefits from using the app.
-              Text(
-                "Whether you're a music teacher preparing materials or a student learning to play, "
-                "Transpose X helps you focus on what matters: making music.",
-                style: AppTextStyles.bodyText,
-              ),
-              SizedBox(height: 16),
+                /// Paragraph on who benefits from using the app.
+                Text(
+                  "Whether you're a music teacher preparing materials or a student learning to play, "
+                  "Transpose X helps you focus on what matters: making music.",
+                  style: AppTextStyles.bodyText,
+                ),
+                SizedBox(height: 16),
 
-              /// Paragraph about the team behind Transpose X.
-              Text(
-                "We're a small team of music lovers, technologists, and designers committed to "
-                "building tools that remove friction and foster creativity.",
-                style: AppTextStyles.bodyText,
-              ),
-              SizedBox(height: 24),
+                /// Paragraph about the team behind Transpose X.
+                Text(
+                  "We're a small team of music lovers, technologists, and designers committed to "
+                  "building tools that remove friction and foster creativity.",
+                  style: AppTextStyles.bodyText,
+                ),
+                SizedBox(height: 24),
 
-              /// Closing gratitude message to the users.
-              Text(
-                "Thank you for being part of our journey. 🎼",
-                style: AppTextStyles.bodyText,
-              ),
-            ],
+                /// Closing gratitude message to the users.
+                Text(
+                  "Thank you for being part of our journey. 🎼",
+                  style: AppTextStyles.bodyText,
+                ),
+                SizedBox(height: 32),
+              ],
+            ),
           ),
         ),
       ),

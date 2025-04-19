@@ -4,7 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-const String _baseUrl = 'http://10.0.0.246:3000'; // Local backend address
+const String _baseUrl = 'http://10.0.0.134:3000'; // Local backend address
 
 /// Saves XML content to a temporary file.
 ///

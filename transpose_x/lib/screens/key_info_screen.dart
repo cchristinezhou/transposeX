@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
-/// A screen that explains how the app detects the key of a piece of sheet music.
+/// A screen that explains how Transpose X detects the key signature of uploaded sheet music.
 ///
-/// Provides a user-friendly overview of the key detection process
-/// and why only one key is detected in most cases.
+/// Provides users with a simple and accessible explanation of the detection process,
+/// focusing on why only the dominant key is detected for ease of use.
 class KeyInfoScreen extends StatelessWidget {
-  /// Creates a [KeyInfoScreen].
+  /// Creates an instance of [KeyInfoScreen].
   const KeyInfoScreen({super.key});
 
   @override
@@ -15,7 +15,11 @@ class KeyInfoScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        leading: const BackButton(color: AppColors.accent),
+        leading: Semantics(
+          label: "Go back to previous screen",
+          button: true,
+          child: const BackButton(color: AppColors.accent),
+        ),
         backgroundColor: AppColors.background,
         elevation: 0,
       ),
@@ -28,21 +32,29 @@ class KeyInfoScreen extends StatelessWidget {
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  SizedBox(height: 16),
-                  Text(
-                    "How We Detect\nYour Key",
-                    style: AppTextStyles.largeHeading,
+                children: [
+                  const SizedBox(height: 16),
+                  Semantics(
+                    header: true,
+                    child: Text(
+                      "How We Detect\nYour Key",
+                      style: AppTextStyles.largeHeading,
+                    ),
                   ),
                   SizedBox(height: 24),
                   Text(
-                    "Transpose X simplifies key detection by identifying the dominant key in your sheet music. If a piece contains multiple key signatures, we focus on the most prominent one to keep the transposition process smooth and straightforward.",
+                    "Transpose X simplifies key detection by identifying the dominant key in your sheet music. "
+                    "If a piece contains multiple key signatures, we focus on the most prominent one "
+                    "to keep the transposition process smooth and straightforward.",
                     style: AppTextStyles.bodyText,
                   ),
                   SizedBox(height: 24),
-                  Text(
-                    "Why Do We Detect Only One Key?",
-                    style: AppTextStyles.subHeading,
+                  Semantics(
+                    header: true,
+                    child: Text(
+                      "Why Do We Detect Only One Key?",
+                      style: AppTextStyles.subHeading,
+                    ),
                   ),
                   SizedBox(height: 8),
                   Text(

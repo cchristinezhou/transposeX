@@ -9,7 +9,7 @@ import '../theme/app_text_styles.dart';
 
 /// A screen displaying user profile options like Name, Age, and Instrument.
 ///
-/// Also provides navigation links to About Us and Privacy Policy screens.
+/// Also provides navigation links to "About Us" and "Privacy Policy" screens.
 class ProfileScreen extends StatelessWidget {
   /// Creates a [ProfileScreen].
   const ProfileScreen({super.key});
@@ -19,15 +19,26 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        /// Title displayed in the AppBar.
         title: const Text("My Profile", style: AppTextStyles.sectionHeading),
+
+        /// Centers the AppBar title.
         centerTitle: true,
+
+        /// AppBar background color.
         backgroundColor: AppColors.background,
-        elevation: 0,
+
+        /// AppBar text/icon color.
         foregroundColor: AppColors.accent,
+
+        /// No shadow under AppBar.
+        elevation: 0,
       ),
       body: Column(
         children: [
           const SizedBox(height: 20),
+
+          /// Main profile options list (Name, Age, Instrument).
           Expanded(
             child: Column(
               children: [
@@ -44,6 +55,8 @@ class ProfileScreen extends StatelessWidget {
               ],
             ),
           ),
+
+          /// Bottom links: About Us and Privacy Policy.
           Padding(
             padding: const EdgeInsets.only(bottom: 32),
             child: _buildBottomLinks(context),
@@ -53,41 +66,51 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  /// Builds a tappable ListTile for navigating to a profile detail screen.
+  ///
+  /// [context] - BuildContext to push the new screen.
+  /// [title] - The title shown on the tile.
+  /// [screen] - The destination screen widget.
   Widget _buildProfileOption(
     BuildContext context,
     String title,
     Widget screen,
   ) {
-    return ListTile(
-      title: Text(title, style: AppTextStyles.bodyMedium),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 18),
-      onTap: () {
-        Navigator.of(context).push(
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) => screen,
-            transitionsBuilder: (
-              context,
-              animation,
-              secondaryAnimation,
-              child,
-            ) {
-              const begin = Offset(1.0, 0.0);
-              const end = Offset.zero;
-              const curve = Curves.easeInOut;
-              final tween = Tween(
-                begin: begin,
-                end: end,
-              ).chain(CurveTween(curve: curve));
-              final offsetAnimation = animation.drive(tween);
+    return Semantics(
+      label: "$title option",
+      button: true,
+      child: ListTile(
+        title: Text(title, style: AppTextStyles.bodyMedium),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 18),
+        onTap: () {
+          Navigator.of(context).push(
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) => screen,
+              transitionsBuilder: (
+                context,
+                animation,
+                secondaryAnimation,
+                child,
+              ) {
+                const begin = Offset(1.0, 0.0);
+                const end = Offset.zero;
+                const curve = Curves.easeInOut;
+                final tween = Tween(
+                  begin: begin,
+                  end: end,
+                ).chain(CurveTween(curve: curve));
+                final offsetAnimation = animation.drive(tween);
 
-              return SlideTransition(position: offsetAnimation, child: child);
-            },
-          ),
-        );
-      },
+                return SlideTransition(position: offsetAnimation, child: child);
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 
+  /// Builds a simple divider between profile options.
   Widget _buildDivider() {
     return const Divider(
       thickness: 1,
@@ -96,27 +119,39 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  /// Builds navigation links at the bottom of the screen (About Us, Privacy Policy).
   Widget _buildBottomLinks(BuildContext context) {
     return Column(
       children: [
-        GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AboutUsScreen()),
-            );
-          },
-          child: const Text("About Us", style: AppTextStyles.bottomLink),
+        Semantics(
+          label: "About Us link",
+          button: true,
+          child: GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AboutUsScreen()),
+              );
+            },
+            child: const Text("About Us", style: AppTextStyles.bottomLink),
+          ),
         ),
         const SizedBox(height: 10),
-        GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
-            );
-          },
-          child: const Text("Privacy Policy", style: AppTextStyles.bottomLink),
+        Semantics(
+          label: "Privacy Policy link",
+          button: true,
+          child: GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
+              );
+            },
+            child: const Text(
+              "Privacy Policy",
+              style: AppTextStyles.bottomLink,
+            ),
+          ),
         ),
       ],
     );

@@ -20,7 +20,7 @@ class AppTextStyles {
   /// Subtitle or secondary text style, grey color.
   static const TextStyle subtitle = TextStyle(
     fontSize: 14,
-    color: AppColors.subtitleGrey,
+    color: AppColors.accent,
   );
 
   /// Text style for error messages or validation errors.
@@ -79,7 +79,7 @@ class AppTextStyles {
 
   /// Slightly smaller body text (for bullet points, notes).
   static const TextStyle bodySmall = TextStyle(
-    fontSize: 15,
+    fontSize: 13,
     height: 1.6,
     color: AppColors.accent,
   );
@@ -93,7 +93,8 @@ class AppTextStyles {
 
   /// Link text (e.g., 'learn more here').
   static const TextStyle linkText = TextStyle(
-    fontSize: 12,
+    fontSize: 13,
+    height: 1.6,
     color: AppColors.primaryPurple,
     decoration: TextDecoration.underline,
   );

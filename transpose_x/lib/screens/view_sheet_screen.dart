@@ -11,7 +11,8 @@ import '../theme/app_text_styles.dart';
 
 /// A screen that displays a MusicXML sheet using a WebView viewer.
 ///
-/// Allows users to zoom, rename, download, and share their sheet music.
+/// Supports zooming, renaming, downloading, and sharing of sheet music.
+/// Optimized for screen reader accessibility.
 class ViewSheetScreen extends StatefulWidget {
   /// The MusicXML content.
   final String xmlContent;
@@ -98,52 +99,66 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text(
-              "Rename Your Sheet",
-              style: AppTextStyles.bodyMedium,
+            title: Semantics(
+              header: true,
+              child: Text("Rename Your Sheet", style: AppTextStyles.bodyMedium),
             ),
-            content: TextField(
-              controller: controller,
-              decoration: const InputDecoration(hintText: "Enter new title"),
+            content: Semantics(
+              textField: true,
+              child: TextField(
+                controller: controller,
+                decoration: const InputDecoration(hintText: "Enter new title"),
+              ),
             ),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Cancel", style: AppTextStyles.primaryAction),
+              Semantics(
+                button: true,
+                label: "Cancel renaming",
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    "Cancel",
+                    style: AppTextStyles.primaryAction,
+                  ),
+                ),
               ),
-              TextButton(
-                onPressed: () async {
-                  final newName = controller.text.trim();
-                  if (newName.isEmpty) return;
-                  setState(() {
-                    _title = newName;
-                  });
-                  Navigator.pop(context);
+              Semantics(
+                button: true,
+                label: "Save new title",
+                child: TextButton(
+                  onPressed: () async {
+                    final newName = controller.text.trim();
+                    if (newName.isEmpty) return;
+                    setState(() {
+                      _title = newName;
+                    });
+                    Navigator.pop(context);
 
-                  try {
-                    final success = await ApiService.renameSheet(
-                      widget.fileName,
-                      newName,
-                    );
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          success
-                              ? "✅ Renamed successfully!"
-                              : "❌ Failed to rename on server.",
+                    try {
+                      final success = await ApiService.renameSheet(
+                        widget.fileName,
+                        newName,
+                      );
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            success
+                                ? "✅ Renamed successfully!"
+                                : "❌ Failed to rename on server.",
+                          ),
                         ),
-                      ),
-                    );
-                  } catch (e) {
-                    if (!mounted) return;
-                    print('❌ Rename error: $e');
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("❌ Error updating name.")),
-                    );
-                  }
-                },
-                child: const Text("Save", style: AppTextStyles.primaryAction),
+                      );
+                    } catch (e) {
+                      if (!mounted) return;
+                      print('❌ Rename error: $e');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("❌ Error updating name.")),
+                      );
+                    }
+                  },
+                  child: const Text("Save", style: AppTextStyles.primaryAction),
+                ),
               ),
             ],
           ),
@@ -159,18 +174,22 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
       builder:
           (context) => Container(
             padding: const EdgeInsets.symmetric(vertical: 24),
-            child: _buildDownloadOption("XML", Icons.code, () async {
-              try {
-                final file = await saveXmlFile(widget.xmlContent);
-                await saveToDownloads(file);
-                _showSuccessSnackBar();
-              } catch (e) {
-                print('❌ XML save failed: $e');
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("❌ Failed to save XML.")),
-                );
-              }
-            }),
+            child: _buildDownloadOption(
+              "Download as XML",
+              Icons.code,
+              () async {
+                try {
+                  final file = await saveXmlFile(widget.xmlContent);
+                  await saveToDownloads(file);
+                  _showSuccessSnackBar();
+                } catch (e) {
+                  print('❌ XML save failed: $e');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("❌ Failed to save XML.")),
+                  );
+                }
+              },
+            ),
           ),
     );
   }
@@ -180,13 +199,17 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
   }
 
   Widget _buildDownloadOption(String label, IconData icon, VoidCallback onTap) {
-    return ListTile(
-      leading: const Icon(Icons.code, color: AppColors.accent),
-      title: Text(label, style: AppTextStyles.bodyMedium),
-      onTap: () {
-        Navigator.pop(context);
-        onTap();
-      },
+    return Semantics(
+      button: true,
+      label: "Download option: $label",
+      child: ListTile(
+        leading: Icon(icon, color: AppColors.accent),
+        title: Text(label, style: AppTextStyles.bodyMedium),
+        onTap: () {
+          Navigator.pop(context);
+          onTap();
+        },
+      ),
     );
   }
 
@@ -198,38 +221,59 @@ class _ViewSheetScreenState extends State<ViewSheetScreen> {
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.accent,
         elevation: 0,
-        title: Text(_title, style: AppTextStyles.bodyMedium),
+        title: Semantics(
+          header: true,
+          child: Text(_title, style: AppTextStyles.bodyMedium),
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.zoom_in),
-            onPressed: () => _zoom(1.2),
+          Semantics(
+            button: true,
+            label: "Zoom in sheet",
+            child: IconButton(
+              icon: const Icon(Icons.zoom_in),
+              onPressed: () => _zoom(1.2),
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.zoom_out),
-            onPressed: () => _zoom(0.8),
+          Semantics(
+            button: true,
+            label: "Zoom out sheet",
+            child: IconButton(
+              icon: const Icon(Icons.zoom_out),
+              onPressed: () => _zoom(0.8),
+            ),
           ),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == "Rename") {
-                _showRenameDialog();
-              } else if (value == "Download") {
-                _showDownloadOptions();
-              } else if (value == "Share") {
-                _shareXml();
-              }
-            },
-            itemBuilder:
-                (context) => const [
-                  PopupMenuItem(value: "Rename", child: Text("Rename")),
-                  PopupMenuItem(value: "Download", child: Text("Download XML")),
-                  PopupMenuItem(value: "Share", child: Text("Share XML")),
-                ],
+          Semantics(
+            button: true,
+            label: "More options for sheet",
+            child: PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == "Rename") {
+                  _showRenameDialog();
+                } else if (value == "Download") {
+                  _showDownloadOptions();
+                } else if (value == "Share") {
+                  _shareXml();
+                }
+              },
+              itemBuilder:
+                  (context) => const [
+                    PopupMenuItem(value: "Rename", child: Text("Rename")),
+                    PopupMenuItem(
+                      value: "Download",
+                      child: Text("Download XML"),
+                    ),
+                    PopupMenuItem(value: "Share", child: Text("Share XML")),
+                  ],
+            ),
           ),
         ],
       ),
       body: RepaintBoundary(
         key: _previewKey,
-        child: WebViewWidget(controller: _controller),
+        child: Semantics(
+          label: "Sheet music preview",
+          child: WebViewWidget(controller: _controller),
+        ),
       ),
     );
   }
