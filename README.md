@@ -41,7 +41,7 @@ By leveraging **Optical Music Recognition (OMR)** and **music processing algorit
 - I want the app to detect and show the original key so I can confirm the starting point.
 - I want the app to warn me if the uploaded sheet music is unreadable or unclear.
 - I want to zoom in and out on my sheet music for better readability.
-- I want to save my transposed sheet music in multiple formats (PDF, XML, and JPEG).
+- I want to save my transposed sheet music in a format that's portable (XML).
 - I want a simple and easy-to-use interface, so I don’t get confused while using the app.
 - I want the app to function properly on my phone or tablet so I can use it anywhere.
 - I want the app to be fast and responsive, so I don’t have to wait too long for my music to be transposed.
@@ -174,10 +174,10 @@ gantt
 - Users must be able to **select a new key** for transposition (e.g., from C major to G major).
 - The app must **transpose all musical elements**, including melody, chords, and key signatures.
 - The app must allow users to **preview the transposed sheet music** before saving or downloading.
-- The app must support exporting transposed sheet music in **PDF, MusicXML, and JPEG formats**.
+- The app must support exporting transposed sheet music in **MusicXML format**.
 - Users must be able to **zoom in/out** and adjust the display for better readability.
 - The app must provide **real-time feedback or warnings** if the upload is unclear, incomplete, or unreadable.
-- The app must allow users to save transposed sheet music in different formats (**PDF, XML, JPEG**).
+- The app must allow users to save transposed sheet music in XML. 
 
 ### 3.2 Non-Functional Requirements
 
