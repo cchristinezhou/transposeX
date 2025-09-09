@@ -1,0 +1,1 @@
+gunicorn transpose_service:app
