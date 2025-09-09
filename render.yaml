@@ -1,1 +1,6 @@
-gunicorn transpose_service:app
+services:
+  - type: web
+    name: transposex-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn transpose:app
