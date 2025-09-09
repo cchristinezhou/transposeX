@@ -3,5 +3,5 @@ services:
     name: transpose-service
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn transpose:app
-    workingDir: transpose_x/backend
+    startCommand: gunicorn backend.transpose:app
+    workingDir: transpose_x
