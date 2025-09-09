@@ -206,7 +206,7 @@ app.post('/api/transpose', async (req, res) => {
     if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
     fs.writeFileSync(inputPath, xml, 'utf-8');
 
-    const response = await axios.post('http://localhost:5000/transpose', { xml, interval });
+    const response = await axios.post('https://transpose-service.onrender.com/transpose', { xml, interval });
     const transposedXml = response.data.transposedXml;
 
     res.status(200).json({
