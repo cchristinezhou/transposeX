@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
@@ -13,9 +16,20 @@ process.env.TESSDATA_PREFIX = '/opt/homebrew/share'; // Set for Tesseract
 
 const musescorePath = process.env.MUSESCORE_PATH;
 const audiverisPath = process.env.AUDIVERIS_PATH || "/Applications/Audiveris.app/Contents/app";
+const uploadsDir = path.join(process.cwd(), 'uploads');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+const cors = require('cors');
+app.use(cors());
+
+// Ensure uploads directory exists
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+  console.log('📁 uploads/ folder created');
+} else {
+  console.log('📁 uploads/ folder already exists');
+}
 
 // MySQL connection setup
 const connection = mysql.createConnection({
@@ -224,8 +238,8 @@ app.post('/api/transpose', async (req, res) => {
 });
 
 // Start server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server is running on http://0.0.0.0:${PORT}`);
+app.listen(PORT, () => {
+  console.log(`🚀 Server is running on ${PORT}`);
 });
 
 // Rename Sheet Endpoint
