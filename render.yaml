@@ -2,6 +2,6 @@ services:
   - type: web
     name: transposex-backend
     env: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r transpose_x/backend/requirements.txt
     startCommand: gunicorn transpose:app
     workingDir: transpose_x/backend
