@@ -19,10 +19,11 @@ const PORT = 3000;
 
 // MySQL connection setup
 const connection = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME,
+  host: 'hopper.proxy.rlwy.net',
+  user: 'root',
+  password: 'ZuVBzBqHGqPqDQFMIdgapcuGVOupDJan',
+  database: 'railway',
+  port: 45563,
 });
 
 connection.connect((err) => {
@@ -206,7 +207,7 @@ app.post('/api/transpose', async (req, res) => {
     if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
     fs.writeFileSync(inputPath, xml, 'utf-8');
 
-    const response = await axios.post('https://transpose-service.onrender.com/transpose', { xml, interval });
+    const response = await axios.post('https://transposex.onrender.com/transpose', { xml, interval });
     const transposedXml = response.data.transposedXml;
 
     res.status(200).json({
