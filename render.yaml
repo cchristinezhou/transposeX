@@ -2,6 +2,8 @@ services:
   - type: web
     name: transpose-service
     env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn backend.transpose:app
-    workingDir: transpose_x
+    buildCommand: cd transpose_x/backend && pip install -r requirements.txt
+    startCommand: cd transpose_x/backend && gunicorn transpose:app
+    buildFilter:
+      paths:
+        - transpose_x/backend/**
