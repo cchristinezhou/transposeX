@@ -7,6 +7,7 @@ const glob = require('glob');
 require('dotenv').config();
 const mysql = require('mysql2');
 const xml2js = require('xml2js');
+const axios = require('axios');
 
 process.env.TESSDATA_PREFIX = '/opt/homebrew/share'; // Set for Tesseract
 
@@ -205,8 +206,8 @@ app.post('/api/transpose', async (req, res) => {
     if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
     fs.writeFileSync(inputPath, xml, 'utf-8');
 
-    await transposeMXL(inputPath, Number(interval), outputPath);
-    const transposedXml = fs.readFileSync(outputPath, 'utf-8');
+    const response = await axios.post('http://localhost:5000/transpose', { xml, interval });
+    const transposedXml = response.data.transposedXml;
 
     res.status(200).json({
       message: 'Transposition successful',
@@ -220,36 +221,6 @@ app.post('/api/transpose', async (req, res) => {
     });
   }
 });
-
-// Transpose helper
-async function transposeMXL(inputPath, interval, outputPath) {
-  const xml = fs.readFileSync(inputPath, 'utf-8');
-  const parser = new xml2js.Parser();
-  const builder = new xml2js.Builder();
-
-  const musicXmlObj = await parser.parseStringPromise(xml);
-
-  const transposeKey = (keyObj) => {
-    if (keyObj && keyObj.fifths) {
-      keyObj.fifths[0] = (parseInt(keyObj.fifths[0]) + interval).toString();
-    }
-  };
-
-  const parts = musicXmlObj['score-partwise']?.part || [];
-  parts.forEach((part) => {
-    const measures = part.measure || [];
-    measures.forEach((measure) => {
-      if (measure.attributes && measure.attributes[0].key) {
-        transposeKey(measure.attributes[0].key[0]);
-      }
-    });
-  });
-
-  const transposedXml = builder.buildObject(musicXmlObj);
-  fs.writeFileSync(outputPath, transposedXml, 'utf-8');
-}
-
-module.exports = transposeMXL;
 
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
