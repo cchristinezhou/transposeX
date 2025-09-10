@@ -11,7 +11,6 @@ const axios = require('axios');
 
 process.env.TESSDATA_PREFIX = '/opt/homebrew/share'; // Set for Tesseract
 
-const musescorePath = process.env.MUSESCORE_PATH;
 const audiverisPath = path.join(__dirname, 'audiveris');
 
 const app = express();
@@ -111,7 +110,7 @@ app.post('/upload', upload.single('musicImage'), (req, res) => {
   fs.mkdirSync(outputDir, { recursive: true });
 
   console.log(`📌 File received: ${inputPath}`);
-  const command = `java -cp "${audiverisPath}/*" org.audiveris.omr.Main -batch -export -output "${outputDir}" -- "${inputPath}"`;
+  const command = `java -cp "${audiverisPath}/lib/*" org.audiveris.omr.Main -batch -export -output "${outputDir}" -- "${inputPath}"`;
   console.log("📌 Running Audiveris Command:", command);
 
   exec(command, (error, stdout, stderr) => {
