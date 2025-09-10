@@ -27,9 +27,8 @@ ENV NODE_ENV=production
 # Expose port for Render (must match your service port)
 EXPOSE 10000
 
-# Download and set up Audiveris
-RUN curl -fL -o audiveris.zip https://github.com/cchristinezhou/transposeX/releases/download/v5.7.0/audiveris.zip && \
-    unzip audiveris.zip && \
+RUN unzip audiveris.zip && \
+    ls -R && \
     mv $(unzip -Z -1 audiveris.zip | head -1 | cut -d/ -f1) audiveris && \
     rm audiveris.zip
 
