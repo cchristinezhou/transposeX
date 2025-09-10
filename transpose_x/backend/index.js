@@ -89,6 +89,11 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+// Health Check Endpoint
+app.get('/', (req, res) => {
+  res.send('🔥 Audiveris Backend is Running 🔥');
+});
+
 // Upload Endpoint
 app.post('/upload', upload.single('musicImage'), (req, res) => {
   const sheetName = req.body.sheetName;
