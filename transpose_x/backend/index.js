@@ -74,7 +74,8 @@ connection.connect((err) => {
 app.use(express.json({ limit: '20mb' })); 
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-app.use('/MusicXml', express.static(path.join(__dirname, 'uploads/MusicXml')));
+const musicXmlPath = path.join('/tmp', 'uploads/MusicXml');
+app.use('/MusicXml', express.static(musicXmlPath));
 app.use(express.json());
 
 // Multer setup
@@ -213,7 +214,7 @@ app.post('/api/transpose', async (req, res) => {
   }
 
   try {
-    const tmpDir = path.join(__dirname, 'uploads/tmp');
+    const tmpDir = path.join('/tmp', 'uploads/tmp');
     const inputPath = path.join(tmpDir, 'original.xml');
     const outputPath = path.join(tmpDir, 'transposed.xml');
 
