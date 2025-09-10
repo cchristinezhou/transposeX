@@ -12,7 +12,7 @@ const axios = require('axios');
 process.env.TESSDATA_PREFIX = '/opt/homebrew/share'; // Set for Tesseract
 
 const musescorePath = process.env.MUSESCORE_PATH;
-const audiverisPath = process.env.AUDIVERIS_PATH || "/Applications/Audiveris.app/Contents/app";
+const audiverisPath = path.join(__dirname, 'audiveris');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
