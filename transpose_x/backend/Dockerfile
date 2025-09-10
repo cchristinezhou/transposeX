@@ -3,7 +3,12 @@ FROM node:18-slim
 
 # Install Java, curl, unzip (needed for Audiveris setup)
 RUN apt-get update && \
-    apt-get install -y default-jdk curl unzip && \
+    apt-get install -y curl unzip gnupg && \
+    mkdir -p /usr/share/keyrings && \
+    curl -fsSL https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor -o /usr/share/keyrings/adoptium-archive-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/adoptium-archive-keyring.gpg] https://packages.adoptium.net/artifactory/deb bookworm main" > /etc/apt/sources.list.d/adoptium.list && \
+    apt-get update && \
+    apt-get install -y temurin-21-jdk && \
     apt-get clean
 
 # Set working directory
