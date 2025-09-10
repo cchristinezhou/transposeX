@@ -17,8 +17,6 @@ const uploadsDir = path.join(process.cwd(), 'uploads');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const cors = require('cors');
-app.use(cors());
 
 // Ensure uploads directory exists
 if (!fs.existsSync(uploadsDir)) {
