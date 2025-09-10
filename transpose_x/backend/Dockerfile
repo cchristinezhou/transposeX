@@ -28,10 +28,10 @@ ENV NODE_ENV=production
 EXPOSE 10000
 
 # Download and set up Audiveris
-RUN curl -LO https://github.com/Audiveris/audiveris/releases/download/5.3.2/audiveris-5.3.2.zip && \
-    unzip audiveris-5.3.2.zip && \
+RUN curl -fL -o audiveris.zip https://github.com/Audiveris/audiveris/releases/download/5.3.2/audiveris-5.3.2.zip && \
+    unzip audiveris.zip && \
     mv audiveris-5.3.2 audiveris && \
-    rm audiveris-5.3.2.zip
+    rm audiveris.zip
 
 # Start the app
 CMD ["node", "index.js"]
