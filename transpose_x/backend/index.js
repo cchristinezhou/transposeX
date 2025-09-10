@@ -13,17 +13,17 @@ process.env.TESSDATA_PREFIX = '/opt/homebrew/share'; // Set for Tesseract
 
 const musescorePath = process.env.MUSESCORE_PATH;
 const audiverisPath = process.env.AUDIVERIS_PATH || "/Applications/Audiveris.app/Contents/app";
-const uploadsDir = path.join(process.cwd(), 'uploads');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Ensure uploads directory exists
+const uploadsDir = path.join('/tmp', 'uploads');
+
 if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir);
-  console.log('📁 uploads/ folder created');
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log("📂 Created 'uploads/' directory manually at runtime");
 } else {
-  console.log('📁 uploads/ folder already exists');
+  console.log("✅ 'uploads/' directory exists");
 }
 
 // MySQL connection setup
@@ -91,12 +91,16 @@ const upload = multer({ storage });
 // Upload Endpoint
 app.post('/upload', upload.single('musicImage'), (req, res) => {
   const sheetName = req.body.sheetName;
+  console.log('🛬 Incoming /upload request');
+    console.log('📦 Uploaded file:', req.file);
+    console.log('📝 Sheet name:', sheetName);
+
   if (!req.file || !sheetName) {
     return res.status(400).json({ error: 'Both file and sheetName are required' });
   }
 
   const inputPath = path.resolve(req.file.path);
-  const baseOutputDir = path.resolve('uploads/MusicXml');
+  const baseOutputDir = path.resolve('/tmp/uploads/MusicXml');
   const outputDir = path.join(baseOutputDir, `${Date.now()}_${path.parse(inputPath).name}`);
   fs.mkdirSync(outputDir, { recursive: true });
 
