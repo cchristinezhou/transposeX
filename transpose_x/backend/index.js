@@ -15,7 +15,7 @@ const musescorePath = process.env.MUSESCORE_PATH;
 const audiverisPath = path.join(__dirname, 'audiveris');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
 const uploadsDir = path.join('/tmp', 'uploads');
 
