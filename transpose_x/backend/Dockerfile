@@ -1,43 +1,41 @@
-# Stage 1: Base image with Node.js and Java 22
+# Stage 1: Base image with Node.js and Java
 FROM node:18-slim
 
-# Install dependencies: curl, unzip, gnupg for key handling
+# Install dependencies and Java 22 from Adoptium (safer than Oracle URL)
 RUN apt-get update && \
-    apt-get install -y curl unzip gnupg && \
-    # Add Adoptium GPG key
-    curl -fsSL https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor -o /usr/share/keyrings/adoptium-archive-keyring.gpg && \
-    # Add Adoptium to sources
-    echo "deb [signed-by=/usr/share/keyrings/adoptium-archive-keyring.gpg] https://packages.adoptium.net/artifactory/deb bookworm main" | tee /etc/apt/sources.list.d/adoptium.list && \
-    # Install OpenJDK 22 (Temurin)
-    apt-get update && \
-    apt-get install -y temurin-22-jdk && \
+    apt-get install -y curl unzip wget gnupg ca-certificates && \
+    wget https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.1%2B8/OpenJDK22U-jdk_x64_linux_hotspot_22.0.1_8.deb && \
+    apt install -y ./OpenJDK22U-jdk_x64_linux_hotspot_22.0.1_8.deb && \
+    rm OpenJDK22U-jdk_x64_linux_hotspot_22.0.1_8.deb && \
+    java -version && \
     apt-get clean
 
 # Set working directory
 WORKDIR /app
 
-# Copy Node.js dependency files first (leverages Docker caching)
+# Copy Node.js dependency files
 COPY package*.json ./
 
-# Install Node.js dependencies
+# Install dependencies
 RUN npm install
 
-# Copy entire backend app
+# Copy all backend files
 COPY . .
 
-# Create directory for Audiveris output (needed for Render temp storage)
+# Create required directories
 RUN mkdir -p /tmp/uploads/MusicXml
+
+# Unzip Audiveris
+RUN unzip audiveris.zip && \
+    ls -R && \
+    mv $(unzip -Z -1 audiveris.zip | head -1 | cut -d/ -f1) audiveris && \
+    rm audiveris.zip
 
 # Set environment variables
 ENV NODE_ENV=production
 
-# Expose the port your server runs on (match index.js)
+# Expose port for Render
 EXPOSE 10000
 
-# Unzip Audiveris and move it into place
-RUN unzip audiveris.zip && \
-    mv $(unzip -Z -1 audiveris.zip | head -1 | cut -d/ -f1) audiveris && \
-    rm audiveris.zip
-
-# Launch the backend server
+# Start the app
 CMD ["node", "index.js"]
