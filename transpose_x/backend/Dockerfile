@@ -1,16 +1,15 @@
-# Stage 1: Base image with Node.js and Java
+# Stage 1: Base image with Node.js
 FROM node:18-slim
 
-# Install dependencies and Java 22 from Adoptium (safer than Oracle URL)
+# Install basic dependencies required for Audiveris installer
 RUN apt-get update && \
-    apt-get install -y curl unzip wget gnupg ca-certificates apt-transport-https && \
-    mkdir -p /etc/apt/keyrings && \
-    wget -O - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | tee /etc/apt/keyrings/adoptium.gpg > /dev/null && \
-    echo "deb [signed-by=/etc/apt/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | tee /etc/apt/sources.list.d/adoptium.list && \
-    apt-get update && \
-    apt-get install -y temurin-22-jdk && \
-    java -version && \
+    apt-get install -y curl wget ca-certificates && \
     apt-get clean
+
+# Download and install Audiveris Linux installer (comes with JRE included)
+RUN wget https://github.com/Audiveris/audiveris/releases/download/5.7.1/Audiveris-5.7.1-linux-x86_64.deb && \
+    apt-get install -y ./Audiveris-5.7.1-linux-x86_64.deb && \
+    rm Audiveris-5.7.1-linux-x86_64.deb
 
 # Set working directory
 WORKDIR /app
@@ -18,7 +17,7 @@ WORKDIR /app
 # Copy Node.js dependency files
 COPY package*.json ./
 
-# Install dependencies
+# Install Node.js dependencies
 RUN npm install
 
 # Copy all backend files
@@ -27,11 +26,8 @@ COPY . .
 # Create required directories
 RUN mkdir -p /tmp/uploads/MusicXml
 
-# Unzip Audiveris
-RUN unzip audiveris.zip && \
-    ls -R && \
-    mv $(unzip -Z -1 audiveris.zip | head -1 | cut -d/ -f1) audiveris && \
-    rm audiveris.zip
+# Remove the audiveris.zip extraction since we're using the system-installed version
+# The audiveris command is now available system-wide
 
 # Set environment variables
 ENV NODE_ENV=production
