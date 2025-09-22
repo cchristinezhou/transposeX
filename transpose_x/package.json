@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "expo": "^54.0.9",
     "mysql": "^2.18.1",
     "xml2js": "^0.6.2"
   }
