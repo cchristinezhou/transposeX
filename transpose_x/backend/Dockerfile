@@ -3,10 +3,12 @@ FROM node:18-slim
 
 # Install dependencies and Java 22 from Adoptium (safer than Oracle URL)
 RUN apt-get update && \
-    apt-get install -y curl unzip wget gnupg ca-certificates && \
-    wget https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.1%2B8/OpenJDK22U-jdk_x64_linux_hotspot_22.0.1_8.deb && \
-    apt install -y ./OpenJDK22U-jdk_x64_linux_hotspot_22.0.1_8.deb && \
-    rm OpenJDK22U-jdk_x64_linux_hotspot_22.0.1_8.deb && \
+    apt-get install -y curl unzip wget gnupg ca-certificates apt-transport-https && \
+    mkdir -p /etc/apt/keyrings && \
+    wget -O - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | tee /etc/apt/keyrings/adoptium.gpg > /dev/null && \
+    echo "deb [signed-by=/etc/apt/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | tee /etc/apt/sources.list.d/adoptium.list && \
+    apt-get update && \
+    apt-get install -y temurin-22-jdk && \
     java -version && \
     apt-get clean
 
