@@ -1,39 +1,43 @@
-# Stage 1: Base image with Node.js and Java
+# Stage 1: Base image with Node.js and Java 22
 FROM node:18-slim
 
-# Install Java, curl, unzip (needed for Audiveris setup)
+# Install dependencies: curl, unzip, gnupg for key handling
 RUN apt-get update && \
-    apt-get install -y curl unzip && \
-    curl -fsSL https://download.oracle.com/java/22/latest/jdk-22_linux-x64_bin.deb -o jdk-22.deb && \
-    apt install -y ./jdk-22.deb && \
-    rm jdk-22.deb && \
+    apt-get install -y curl unzip gnupg && \
+    # Add Adoptium GPG key
+    curl -fsSL https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor -o /usr/share/keyrings/adoptium-archive-keyring.gpg && \
+    # Add Adoptium to sources
+    echo "deb [signed-by=/usr/share/keyrings/adoptium-archive-keyring.gpg] https://packages.adoptium.net/artifactory/deb bookworm main" | tee /etc/apt/sources.list.d/adoptium.list && \
+    # Install OpenJDK 22 (Temurin)
+    apt-get update && \
+    apt-get install -y temurin-22-jdk && \
     apt-get clean
 
 # Set working directory
 WORKDIR /app
 
-# Copy Node.js dependency files first (for Docker caching)
+# Copy Node.js dependency files first (leverages Docker caching)
 COPY package*.json ./
 
-# Install dependencies
+# Install Node.js dependencies
 RUN npm install
 
-# Copy all backend files
+# Copy entire backend app
 COPY . .
 
-# Create required directories (esp. for /tmp usage in Render)
+# Create directory for Audiveris output (needed for Render temp storage)
 RUN mkdir -p /tmp/uploads/MusicXml
 
 # Set environment variables
 ENV NODE_ENV=production
 
-# Expose port for Render (must match your service port)
+# Expose the port your server runs on (match index.js)
 EXPOSE 10000
 
+# Unzip Audiveris and move it into place
 RUN unzip audiveris.zip && \
-    ls -R && \
     mv $(unzip -Z -1 audiveris.zip | head -1 | cut -d/ -f1) audiveris && \
     rm audiveris.zip
 
-# Start the app
+# Launch the backend server
 CMD ["node", "index.js"]
